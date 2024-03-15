@@ -4,4 +4,4 @@
 .terraform
 *.ini
 *.egg-info/
-
+**/.terraform.lock.hcl
