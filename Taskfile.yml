@@ -1,13 +1,28 @@
 version: '3'
 
 tasks:
+  apply_artifactory:
+    dir: infra/artifactory_repository
+    cmds:
+      - terraform apply -auto-approve
+
   setup_image:
+    dir: server
     cmds:
       - |
         docker build --platform linux/amd64 -t dd_webshop:latest . -f Dockerfile
         docker tag dd_webshop:latest europe-west4-docker.pkg.dev/dynamicdealmakers-7012254/dd-repo/simulator:latest
         docker push europe-west4-docker.pkg.dev/dynamicdealmakers-7012254/dd-repo/dd_webshop:latest
+    deps: [apply_artifactory]
+
+  apply_webshop:
+    dir: infra/webshop
+    cmds:
+      - terraform apply -auto-approve
+    deps: [setup_image]
 
   build_infra:
     cmds:
-      - terraform apply -auto-approve
+      - task apply_artifactory
+      - task setup_image
+      - task apply_webshop
