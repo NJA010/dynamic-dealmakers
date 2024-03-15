@@ -14,7 +14,7 @@ terraform {
 
 provider "google" {
   project = "dynamicdealmakers-7012254"
-  region  = "europe-west4"
+  region  = "europe-west1"
 }
 
 resource "google_artifact_registry_repository" "dd-repo" {

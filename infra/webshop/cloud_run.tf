@@ -11,15 +11,20 @@ resource "google_project_service" "cloud_scheduler" {
 resource "google_cloud_run_v2_service" "dd-service" {
   name     = "dd-service"
   ingress  = "INGRESS_TRAFFIC_ALL"
-  location = "europe-west4"
+  location = "europe-west1"
 
   template {
     containers {
-      image = "europe-west4-docker.pkg.dev/dynamicdealmakers-7012254/dd-repo/dd_webshop:latest"
+      image = "europe-west1-docker.pkg.dev/dynamicdealmakers-7012254/dd-repo/dd_webshop:latest"
 
       env {
         name  = "DATABASE_URL"
         value = var.database_url
+      }
+
+      env {
+        name  = "API_KEY"
+        value = var.api_key
       }
 
     }
@@ -35,9 +40,10 @@ resource "google_service_account" "scheduler" {
   display_name = "Scheduler Service Account"
 }
 
-resource "google_project_iam_member" "scheduler_job_runner" {
+resource "google_cloud_run_service_iam_member" "scheduler_job_runner" {
+  service = google_cloud_run_v2_service.dd-service.name
   project = "dynamicdealmakers-7012254"
-  role    = "roles/cloudscheduler.jobRunner"
+  role    = "roles/run.invoker"
   member  = "serviceAccount:${google_service_account.scheduler.email}"
 }
 
@@ -45,13 +51,14 @@ resource "google_cloud_scheduler_job" "dd-scheduler" {
   name     = "dd-scheduler"
   schedule = "*/1 * * * *"
   time_zone = "Europe/Amsterdam"
-  region = "us-central1"
+  region = "europe-west1"
 
   http_target {
     http_method = "GET"
     uri = "${google_cloud_run_v2_service.dd-service.uri}/scrape-data"
     oidc_token {
       service_account_email = google_service_account.scheduler.email
+      audience              = google_cloud_run_v2_service.dd-service.uri  
     }
   }
 
