@@ -31,7 +31,7 @@ resource "google_cloud_scheduler_job" "dd-scheduler" {
   time_zone = "Europe/Amsterdam"
 
   http_target {
-    uri = google_cloud_run_v2_service.dd-service.status[0].url
+    uri = "${google_cloud_run_v2_service.dd-service.status[0].url}/scrape-data"
     http_method = "GET"
   }
 
