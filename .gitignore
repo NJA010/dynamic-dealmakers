@@ -1,5 +1,7 @@
 .env
 .venv
 .python-version
+.terraform
 *.ini
 *.egg-info/
+
