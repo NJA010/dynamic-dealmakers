@@ -34,3 +34,13 @@ def scrape(endpoints: list=["prices", "products", "leaderboards", "stocks"]) -> 
             data=data, 
             table_name=f"raw_{endpoint}"
         )
+
+if __name__ == "__main__":
+    import json
+    
+    headers = get_requests_headers(api_key, audience)
+    data = requests.get(f"{audience}/products", headers=headers).json()
+
+    # Write the data to a JSON file
+    with open("data.json", "w") as file:
+        json.dump(data, file)
