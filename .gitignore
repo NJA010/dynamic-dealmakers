@@ -1,7 +1,7 @@
-.env
-.venv
+*.env
+*.venv
 .python-version
-.terraform
+*.terraform
 *.ini
 *.egg-info/
-
+/server/pricing-prd-11719402-69eaf79e6222.json

@@ -1,5 +1,6 @@
 from configparser import ConfigParser
 import psycopg2
+from psycopg2.extras import Json
 
 
 def load_config(filename='database.ini', section='postgresql') -> dict[str, str]:
@@ -27,8 +28,13 @@ class DatabaseClient:
     def __init__(self, config: dict[str, str]) -> None:
         self.conn = connect(config)
 
-    def create(self):
-        raise NotImplementedError
+    def create(self, data: dict, table_name: str):
+        with self.conn.cursor() as cur:
+            columns = ', '.join(data.keys())
+            values = ', '.join(['%s'] * len(data))
+            query = f"INSERT INTO {table_name} ({columns}) VALUES ({values})"
+            cur.execute(query, tuple(data.values()))
+            self.conn.commit()
     
     def read(self):
         raise NotImplementedError
@@ -38,4 +44,10 @@ class DatabaseClient:
     
     def delete(self):
         raise NotImplementedError
+
+
+class DatabaseClient:
+    def __init__(self, config: dict[str, str]) -> None:
+        self.conn = connect(config)
+
     
