@@ -18,8 +18,24 @@ def load_config(filename='database.ini', section='postgresql') -> dict[str, str]
 
 
 def connect(config: dict[str, str]):
-    """ Connect to the PostgreSQL database server """
     with psycopg2.connect(**config) as conn:
         print('Connected to the PostgreSQL server.')
         return conn
 
+
+class DatabaseClient:
+    def __init__(self, config: dict[str, str]) -> None:
+        self.conn = connect(config)
+
+    def create(self):
+        raise NotImplementedError
+    
+    def read(self):
+        raise NotImplementedError
+    
+    def update(self):
+        raise NotImplementedError
+    
+    def delete(self):
+        raise NotImplementedError
+    
