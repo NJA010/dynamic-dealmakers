@@ -1,10 +1,11 @@
-.env
-.venv
+*.env
+*.venv
 .python-version
-.terraform
+*.terraform
 *.ini
 *.egg-info/
-
+/server/pricing-prd-11719402-69eaf79e6222.json
+**/.terraform.lock.hcl
 
 # These are some examples of commonly ignored file patterns.
 # You should customize this list as applicable to your project.
