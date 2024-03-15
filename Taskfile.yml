@@ -20,6 +20,7 @@ tasks:
     dir: infra/artifact_repository
     cmds:
       - terraform apply -auto-approve
+    deps: [pipe_init]
 
   setup_image:
     dir: server
@@ -34,7 +35,7 @@ tasks:
     dir: infra/webshop
     cmds:
       - terraform apply -auto-approve
-    deps: [setup_image]
+    deps: [setup_image, pipe_init]
 
   build_infra:
     cmds:
@@ -42,3 +43,20 @@ tasks:
       - task apply_artifact
       - task setup_image
       - task apply_webshop
+
+  destroy_artifact:
+    dir: infra/artifact_repository
+    cmds:
+      - terraform destroy -auto-approve
+    deps: [pipe_init]
+
+  destroy_webshop:
+    dir: infra/webshop
+    cmds:
+      - terraform destroy -auto-approve
+    deps: [pipe_init]
+
+  destroy_infra:
+    cmds:
+      - task destroy_webshop
+      - task destroy_artifact
