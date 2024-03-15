@@ -20,22 +20,19 @@ tasks:
     dir: infra/artifact_repository
     cmds:
       - terraform apply -auto-approve
-    deps: [pipe_init]
 
   setup_image:
     dir: server
     cmds:
       - |
-        docker build --platform linux/amd64 -t dd_webshop:latest . -f Dockerfile
-        docker tag dd_webshop:latest europe-west4-docker.pkg.dev/dynamicdealmakers-7012254/dd-repo/simulator:latest
+        docker build --platform linux/amd64 -t europe-west4-docker.pkg.dev/dynamicdealmakers-7012254/dd-repo/dd_webshop:latest . -f Dockerfile
+        docker tag dd_webshop:latest europe-west4-docker.pkg.dev/dynamicdealmakers-7012254/dd-repo/dd_webshop:latest
         docker push europe-west4-docker.pkg.dev/dynamicdealmakers-7012254/dd-repo/dd_webshop:latest
-    deps: [apply_artifact]
 
   apply_webshop:
     dir: infra/webshop
     cmds:
       - terraform apply -auto-approve
-    deps: [setup_image, pipe_init]
 
   build_infra:
     cmds:
