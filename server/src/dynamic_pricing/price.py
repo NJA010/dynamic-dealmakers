@@ -9,7 +9,7 @@ class PricingModel(Protocol):
         ...
 
 
-class RandomPricingModel:
+class RandomPricingModel(PricingModel):
     def __init__(self, batches: list[str]):
         self.batches = batches
 
@@ -17,7 +17,7 @@ class RandomPricingModel:
         return {}
 
 
-class DummyPricingModel:
+class DummyPricingModel(PricingModel):
     def predict(self) -> Prediction:
         return {
             "rice": {"rice_5d1839c6-0b35-424e-95de-3bdf91686788": 4.09, "rice_c4fc2dc9-f107-45c8-942b-aa813bb97e30": 3.49, "rice_8d24253b-b6d5-4cb9-8775-f3326fb35ce4": 2.8, "rice_5d33694d-0cd7-437a-9df7-31f54f98e6fd": 4.29, "rice_d159ed9a-d88b-4c1b-a499-fcd40a67f724": 1.24, "rice_525fa148-7741-478f-8661-3726fb1ba1cf": 1.26, "rice_76a27587-14de-4d39-a50a-a2a441e54b6b": 4.78, "rice_acc56fbb-157e-4650-99f1-a5cf93c9dd7e": 4.64, "rice_ab9f7c67-fd69-4311-bbc9-b9b872cd4ac4": 2.43, "rice_b6be7ca1-84d7-4be4-917f-3a8c499f6230": 4.59, "rice_cdec3fbc-05c6-4487-91cb-24067552fd4a": 1.88, "rice_20ceaa77-20b5-4e58-a07c-e93225d18dac": 2.26, "rice_077acbf7-eb8e-4176-94aa-774a5e03f56d": 4.46, "rice_d53be8b0-d655-4c6e-927b-873ff96c42b3": 2.85, "rice_d5788bc9-2fd7-4826-a7f9-d02096b47f98": 1.76, "rice_2c8f214a-d97a-4e3c-8dd7-b5d13f8efbfd": 2.14, "rice_1d5723a8-d4dd-42b6-a6b9-3175edaee479": 1.77, "rice_3dd0d5e0-0e69-413d-968c-6a96f53da5bb": 2.09, "rice_9a2d745e-b428-45ec-b053-58ed663dd683": 3.9, "rice_ea1ebae0-356e-4199-a869-e1c286e6eaac": 3.03, "rice_cc6c4aa8-47ff-44f0-ab94-1b5967334c6c": 1.61, "rice_a3780b7b-5f9d-46d7-bad8-872868c551a9": 4.52, "rice_61a15b2f-f75b-4451-ac8f-a6ccbee66947": 3.68, "rice_3cf919cf-3195-4e05-a4bb-641eea31a892": 2.66, "rice_874dfe91-f017-49eb-b988-0aac1e3fac92": 2.28, "rice_3c661c6a-8d08-4eea-bcd1-90a22a7edf74": 2.26, "rice_461f6b83-426a-43a7-8ef8-d14b59386f5d": 2.17, "rice_327c129f-9958-4ad2-bf72-6be128304782": 4.7, "rice_ed2b9f45-464f-40ce-986e-6e0cb5d62bcb": 3.2, "rice_5d61af9c-e289-48d7-a951-c93c79fc6c5e": 2.8, "rice_c8d7908a-db3c-42d6-9a4d-12a5622b02f6": 4.85, "rice_2f140c1a-19c1-456d-a466-2dca6a7ab132": 1.13, "rice_a7b1c959-8c27-44cd-858d-61081c8f762d": 4.84, "rice_33fdd4ed-7b5e-4e51-a191-f880a81cb3c5": 1.06, "rice_90a23619-7796-42eb-917f-993c1b8be2b6": 4.7, "rice_691a0e01-b13a-4197-9482-2d3066288199": 4.04, "rice_91e2de17-fcb8-4e09-8c05-a69a60434b6b": 2.45, "rice_3dd96691-6ba0-4aa9-ad83-e9baa85ca810": 2.24, "rice_cc7c764e-1b8d-4930-9d1c-11c8e23f5f1d": 2.51, "rice_520cf218-7a71-4a86-951a-813ea801d29f": 2.3, "rice_591a5e03-1c00-465a-8c91-89246bb7cb42": 3.73, "rice_435ce982-0bdb-4e11-9a7e-6019f4315aca": 3.31, "rice_05c4041c-169b-4812-b4e4-8d2408660028": 2.82, "rice_39137243-ab7d-48f5-a5e0-ba6ae5ed2880": 2.63, "rice_c195c5f2-62f9-4d4d-afd1-27de3f785f10": 3.89, "rice_6626531a-9fff-43f9-a7e7-abefcd751211": 3.77, "rice_bad0a279-4491-478d-99c6-f1759318dd97": 3.54, "rice_6dc7e294-a9b6-436e-b431-677abe839d79": 1.68, "rice_20f5ee63-f863-4666-9a3b-3abaf275b8e6": 1.2, "rice_57f081e3-8a05-4734-90ce-5c538f55b5d1": 1.37, "rice_5e40e1d2-035f-499e-a4dc-d1a2dd462a2a": 4.25, "rice_22aa358b-a61e-4b03-9a43-72ed871bb2bd": 4.87, "rice_98999c11-3f8f-45b2-a81f-102b42dd54c8": 1.55, "rice_2425fd14-971d-4cdd-812c-eeea2429def2": 1.08}, 

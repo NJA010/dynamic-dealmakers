@@ -6,6 +6,8 @@ RUN pip install --no-cache -r requirements.txt
 
 COPY . .
 
+RUN pip install -e .
+
 EXPOSE 8080
 
-CMD [ "python", "simulate.py" ]
+CMD [ "python", "server.py" ]
