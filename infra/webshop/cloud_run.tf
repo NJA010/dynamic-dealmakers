@@ -23,3 +23,19 @@ resource "google_cloud_run_v2_service" "dd-service" {
     google_project_service.cloud_run,
   ]
 }
+
+resource "google_cloud_scheduler_job" "dd-scheduler" {
+  name     = "dd-scheduler"
+  location = "europe-west4"
+  schedule = "*/5 * * * *"
+  time_zone = "Europe/Amsterdam"
+
+  http_target {
+    uri = "${google_cloud_run_v2_service.dd-service.status[0].url}/scrape-data"
+    http_method = "GET"
+  }
+
+  depends_on = [
+    google_cloud_run_v2_service.dd-service,
+  ]
+}
