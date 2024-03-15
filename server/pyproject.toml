@@ -3,7 +3,7 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "dynamicpricing"
+name = "dynamic_pricing"
 version = "0.1.0"
 description = "Pricing model endpoint server"
 
@@ -11,5 +11,14 @@ dependencies = [
     "fastapi==0.110.0",
     "psycopg2-binary==2.9.9",
     "pydantic==2.6.4",
+    "pandas",
+    "python-dotenv",
+    "pydantic",
+    "google-auth",
+    "SQLAlchemy",
 ]
 
+[project.optional-dependencies]
+dev = [
+    "pytest"
+]
