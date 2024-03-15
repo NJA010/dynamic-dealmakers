@@ -18,3 +18,7 @@ dependencies = [
     "SQLAlchemy",
 ]
 
+[project.optional-dependencies]
+dev = [
+    "pytest"
+]
