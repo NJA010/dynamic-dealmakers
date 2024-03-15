@@ -1,10 +1,26 @@
 version: '3'
 
 tasks:
-  apply_artifactory:
+  init_artifact:
+    dir: infra/artifact_repository
+    cmds:
+      - terraform init
+  
+  init_webshop:
+    dir: infra/webshop
+    cmds:
+      - terraform init
+
+  pipe_init:
+    cmds:
+      - task init_artifact
+      - task init_webshop
+
+  apply_artifact:
     dir: infra/artifact_repository
     cmds:
       - terraform apply -auto-approve
+    deps: [pipe_init]
 
   setup_image:
     dir: server
@@ -13,16 +29,34 @@ tasks:
         docker build --platform linux/amd64 -t dd_webshop:latest . -f Dockerfile
         docker tag dd_webshop:latest europe-west4-docker.pkg.dev/dynamicdealmakers-7012254/dd-repo/simulator:latest
         docker push europe-west4-docker.pkg.dev/dynamicdealmakers-7012254/dd-repo/dd_webshop:latest
-    deps: [apply_artifactory]
+    deps: [apply_artifact]
 
   apply_webshop:
     dir: infra/webshop
     cmds:
       - terraform apply -auto-approve
-    deps: [setup_image]
+    deps: [setup_image, pipe_init]
 
   build_infra:
     cmds:
-      - task apply_artifactory
+      - task pipe_init
+      - task apply_artifact
       - task setup_image
       - task apply_webshop
+
+  destroy_artifact:
+    dir: infra/artifact_repository
+    cmds:
+      - terraform destroy -auto-approve
+    deps: [pipe_init]
+
+  destroy_webshop:
+    dir: infra/webshop
+    cmds:
+      - terraform destroy -auto-approve
+    deps: [pipe_init]
+
+  destroy_infra:
+    cmds:
+      - task destroy_webshop
+      - task destroy_artifact
