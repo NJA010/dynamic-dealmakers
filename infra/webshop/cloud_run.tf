@@ -34,4 +34,8 @@ resource "google_cloud_scheduler_job" "dd-scheduler" {
     uri = google_cloud_run_v2_service.dd-service.status[0].url
     http_method = "GET"
   }
+
+  depends_on = [
+    google_cloud_run_v2_service.dd-service,
+  ]
 }
