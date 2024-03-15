@@ -7,7 +7,7 @@ from copy import deepcopy
 @pytest.fixture()
 def products():
     # Opening JSON file
-    f = open('./data/products_format_example.json')
+    f = open('./tests/products_format_example.json')
     data = json.load(f)
     return data
 
