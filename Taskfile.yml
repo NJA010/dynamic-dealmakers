@@ -1,12 +1,13 @@
-# https://taskfile.dev
-
 version: '3'
 
-vars:
-  GREETING: Hello, World!
-
 tasks:
-  default:
+  setup_image:
     cmds:
-      - echo "{{.GREETING}}"
-    silent: true
+      - |
+        docker build --platform linux/amd64 -t dd_webshop:latest . -f Dockerfile
+        docker tag dd_webshop:latest europe-west4-docker.pkg.dev/dynamicdealmakers-7012254/dd-repo/simulator:latest
+        docker push europe-west4-docker.pkg.dev/dynamicdealmakers-7012254/dd-repo/dd_webshop:latest
+
+  build_infra:
+    cmds:
+      - terraform apply -auto-approve
