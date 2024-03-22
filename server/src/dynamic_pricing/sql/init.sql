@@ -47,4 +47,12 @@ CREATE TABLE IF NOT EXISTS prices (
     competitor_price NUMERIC NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS stocks (
+    id INTEGER NOT NULL,
+    scraped_at TIMESTAMP NOT NULL,
+    stock_update_id INTEGER NOT NULL,
+    batch_id INTEGER NOT NULL,
+    stock_amount INTEGER NOT NULL
+);
+
 

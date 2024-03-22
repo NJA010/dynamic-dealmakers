@@ -75,7 +75,6 @@ def transform(
             environment = jinja2.Environment()
             template = environment.from_string(file.read())
             query = template.render(max_id=max_id)
-            logging.info(query)
             db.query_no_return(query)
 
         logging.info(f"Raw table tranformation for {endpoint} complete")
