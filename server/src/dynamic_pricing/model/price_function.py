@@ -7,7 +7,6 @@ def get_simple_prices(products: dict, low: int, high: int):
         result[product_name] = {}
         for uuid in products[product_name]['products']:
             result[product_name][uuid] = np.round(np.random.uniform(low, high), 2)
-        print(result[product_name])
     return result
 
 

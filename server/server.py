@@ -20,12 +20,14 @@ app = Flask(__name__)
 @app.route('/scrape-data', methods=['GET'])
 def pricing():
     logging.info("Scraping data...")
+
     scrape()
     return "Data scraped!"
 
 
 @app.route('/prices', methods=['GET'])
 def get_prices():
+    logging.info("Getting prices...")
 
     db_client = DatabaseClient(load_config())
     query = "SELECT * FROM raw_products ORDER BY id DESC LIMIT 1"
@@ -33,6 +35,7 @@ def get_prices():
 
     result = get_simple_prices(product_data[0][2], low=1, high=7)
 
+    logging.info("Prices obtained!")
     return json.dumps(result)
 
 
