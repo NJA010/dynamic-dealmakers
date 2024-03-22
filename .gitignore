@@ -7,6 +7,11 @@
 /server/pricing-prd-11719402-69eaf79e6222.json
 **/.terraform.lock.hcl
 
+# Byte-compiled / optimized / DLL files
+__pycache__/
+**/__pycache__/
+*.pyc
+
 # These are some examples of commonly ignored file patterns.
 # You should customize this list as applicable to your project.
 # Learn more about .gitignore:
@@ -18,9 +23,6 @@ dist/
 
 # Compiled Java class files
 *.class
-
-# Compiled Python bytecode
-*.py[cod]
 
 # Log files
 *.log

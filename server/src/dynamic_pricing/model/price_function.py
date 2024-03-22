@@ -24,7 +24,7 @@ def price_function_sigmoid(
     :param c: shape transformation
     :return: price vector for each product type
     """
-    return b / (1 + np.exp((-stock+a)/c))
+    return b / (1 + np.exp(-np.divide(stock-a,c)))
 
 
 if __name__ == "__main__":

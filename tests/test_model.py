@@ -1,7 +1,9 @@
 import pytest
 import pandas as pd
 import numpy as np
-
+from dynamic_pricing.model.revenue import revenue_calc
+from dynamic_pricing.model.price_function import price_function_sigmoid
+from dynamic_pricing.utils import get_hardcoded_sigmoid_params
 
 products = ['apples-red',
             'apples-green',
@@ -35,10 +37,10 @@ def data():
 
     # Create a dictionary to store the data
     data = {
-        'Date': np.repeat(dates, num_products),
-        'Product': np.tile(products, num_periods),
-        'Selling_Price': selling_prices.flatten(),
-        'Quantity': quantities.flatten()
+        'time': np.repeat(dates, num_products),
+        'product': np.tile(products, num_periods),
+        'sell_price': selling_prices.flatten(),
+        'quantity': quantities.flatten()
     }
 
     # Create DataFrame
@@ -48,4 +50,9 @@ def data():
 
 
 def test_data(data):
+    params = {"a": np.zeros((len(data), 1)) + 25,
+              "b": np.zeros((len(data), 1)) + 10,
+              "c": np.zeros((len(data), 1)) - 28  # High for low stock
+              }
+    revenue_calc(data, price_function_sigmoid, **params)
     assert True
