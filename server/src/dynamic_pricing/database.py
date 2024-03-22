@@ -3,6 +3,7 @@ import psycopg2
 from psycopg2.extras import Json
 import pytz
 from datetime import datetime
+from pathlib import Path
 
 
 def load_config(filename='database.ini', section='postgresql') -> dict[str, str]:
@@ -54,7 +55,8 @@ class DatabaseClient:
     def read_max_id(self, table_name: str, id_col: str = "id") -> int:
         with self.conn.cursor() as cur:
             query = f"SELECT MAX({id_col}) FROM {table_name};"
-            return cur.execute(query).fetchall()[0][0]
+            cur.execute(query)
+            return cur.fetchall()[0][0]
 
     def update(self):
         raise NotImplementedError

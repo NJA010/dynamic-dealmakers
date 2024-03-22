@@ -31,7 +31,7 @@ SELECT
   product_name,
   batch_name,
   p.key AS competitor_name,
-  p.value AS competitor_price
+  p.value::NUMERIC AS competitor_price
 FROM
   prices,
   jsonb_each(competitor_prices) AS p(key, value)

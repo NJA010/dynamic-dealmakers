@@ -5,6 +5,7 @@ import requests
 import google.auth.transport.requests
 import google.oauth2.id_token
 import jinja2
+from pathlib import Path
 
 from dynamic_pricing.database import load_config, DatabaseClient
 
@@ -66,13 +67,16 @@ def transform(
 ) -> None:
 
     for endpoint in endpoints:
-        raw_table = f"raw_{endpoint}"
-        max_id = db.read_max_id(raw_table) if incremental else 0
+        max_id = db.read_max_id(endpoint) if incremental else 0
+        max_id = max_id if max_id is not None else 0
         
-        with open(f"/sql/{endpoint}.sql") as file:
+        path = Path(__file__).parent / "sql" / f"{endpoint}.sql"
+        with open(path) as file:
             environment = jinja2.Environment()
             template = environment.from_string(file.read())
-            db.query_no_return(template.render(max_id=max_id))
+            query = template.render(max_id=max_id)
+            logging.info(query)
+            db.query_no_return(query)
 
         logging.info(f"Raw table tranformation for {endpoint} complete")
         

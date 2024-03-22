@@ -19,7 +19,7 @@ SELECT
   product_name,
   p.key AS batch_name,
   p.value->>'id' AS batch_id,
-  p.value->>'sell_by' AS batch_expiry_date
+  (p.value->>'sell_by')::TIMESTAMP AS batch_expiry_date
 FROM
   products,
   jsonb_each(batch_info) AS p(key, value);
