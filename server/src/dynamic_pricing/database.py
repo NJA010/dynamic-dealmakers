@@ -1,6 +1,7 @@
 from configparser import ConfigParser
 import psycopg2
 from psycopg2.extras import Json
+import pytz
 from datetime import datetime
 
 
@@ -31,7 +32,8 @@ class DatabaseClient:
 
     def create(self, data: dict, table_name: str):
         with self.conn.cursor() as cur:
-            ts = datetime.now()
+            amsterdam_tz = pytz.timezone('Europe/Amsterdam')
+            ts = datetime.now(amsterdam_tz)
             columns = ["scraped_at", "payload"]
             columns_str = ', '.join(columns)
             query = f"INSERT INTO {table_name} ({columns_str}) VALUES ('{ts}', {Json(data)})"

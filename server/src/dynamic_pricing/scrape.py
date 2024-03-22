@@ -1,10 +1,13 @@
 import os
+import logging
 import requests
 import google.auth.transport.requests
 import google.oauth2.id_token
 from dynamic_pricing.database import load_config, DatabaseClient
 
-api_key = os.environ.get("API_KEY")
+logging.basicConfig(level=logging.INFO)
+
+api_key = os.environ.get("TF_VAR_api_key")
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'pricing-prd-11719402-69eaf79e6222.json'
 audience = "https://api-4q7cwzagvq-ez.a.run.app" 
 db = DatabaseClient(load_config())
@@ -24,16 +27,30 @@ def scrape(endpoints: list=["prices", "products", "leaderboards", "stocks"]) -> 
     headers = get_requests_headers(api_key, audience)
 
     # Loop over every endpoint
-    for endpoint in ["prices", "products", "leaderboards", "stocks"]:
+    for endpoint in endpoints:
+        logging.info(f"\nScraping data from {endpoint}...")
 
         # Get the data from the endpoint
-        data = requests.get(f"{audience}/{endpoint}", headers=headers).json()
+        data = requests.get(f"{audience}/{endpoint}", headers=headers)
 
+        if data.status_code != 200:
+            logging.error(
+                f"\nFailed to get data from {endpoint}.\
+                \n\tStatus code: {data.status_code}\
+                \n\tResponse: {data.json()}"
+            )
+            continue
+
+        logging.info(f"\tStatus code: {data.status_code}")
+        
         # Write the data to the database
+        logging.info(f"Writing data from {endpoint} to the database...")
         db.create(
-            data=data, 
+            data=data.json(), 
             table_name=f"raw_{endpoint}"
         )
+        
+        logging.info("Data written to the database!")
 
 if __name__ == "__main__":
     import json
