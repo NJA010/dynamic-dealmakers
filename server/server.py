@@ -9,6 +9,7 @@ import json
 import requests
 import time
 import logging
+from datetime import datetime
 
 logging.basicConfig(level=logging.INFO)
 
@@ -25,18 +26,16 @@ def pricing():
 
 @app.route('/prices', methods=['GET'])
 def get_prices():
-    headers = get_requests_headers(api_key, audience)
-    product_data = requests.get(f"{audience}/products", headers=headers).json()
 
-    # with open('products.json') as file:
-    #     product_data = json.load(file)
+    db_client = DatabaseClient(load_config())
+    query = "SELECT * FROM raw_products ORDER BY id DESC LIMIT 1"
+    product_data: list = db_client.read(query)
+    with open('product_data.json', 'w') as file:
+        json.dump(product_data, file, default=str) 
 
-    result = get_simple_prices(product_data, low=3, high=100)
-    # client = DatabaseClient(load_config())
-    # stock = get_stock(client)
-    # params = get_params(client)
-    # result = price_function_sigmoid(stock, **params)
-    return result
+    result = get_simple_prices(product_data, low=1, high=7)
+
+    return json.dumps(result)
 
 
 if __name__ == '__main__':

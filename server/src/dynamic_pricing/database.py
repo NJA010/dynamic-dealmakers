@@ -40,8 +40,10 @@ class DatabaseClient:
             cur.execute(query, data)
             self.conn.commit()
     
-    def read(self):
-        raise NotImplementedError
+    def read(self, query: str) -> dict:
+        with self.conn.cursor() as cur:
+            cur.execute(query)
+            return cur.fetchall()
     
     def update(self):
         raise NotImplementedError
