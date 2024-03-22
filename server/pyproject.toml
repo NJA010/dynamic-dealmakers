@@ -14,6 +14,9 @@ dependencies = [
     "python-dotenv",
     "pydantic",
     "google-auth",
+    "requests",
+    "flask",
+    "Jinja2",
 ]
 
 [project.optional-dependencies]
@@ -21,4 +24,5 @@ dev = [
     "pytest",
     "ruff",
     "black",
+    "pytest"
 ]

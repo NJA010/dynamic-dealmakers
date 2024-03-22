@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from datetime import datetime
+import datetime
 
 
 class Prices(BaseModel):

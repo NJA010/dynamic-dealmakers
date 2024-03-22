@@ -8,6 +8,7 @@ WITH products AS (
     raw_products,
     jsonb_each(payload) AS p(key, value),
     jsonb_each(p.value->'products') AS pp(key, value)
+  WHERE id > {{ max_id }}
   GROUP BY 1, 2, 3
 )
 

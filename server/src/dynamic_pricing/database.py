@@ -29,6 +29,7 @@ def connect(config: dict[str, str]):
 class DatabaseClient:
     def __init__(self, config: dict[str, str]) -> None:
         self.conn = connect(config)
+        self.conn.autocommit = True
 
     def create(self, data: dict, table_name: str):
         with self.conn.cursor() as cur:
@@ -36,7 +37,7 @@ class DatabaseClient:
             ts = datetime.now(amsterdam_tz)
             columns = ["scraped_at", "payload"]
             columns_str = ', '.join(columns)
-            query = f"INSERT INTO {table_name} ({columns_str}) VALUES ('{ts}', {Json(data)})"
+            query = f"INSERT INTO {table_name} ({columns_str}) VALUES ('{ts}', {Json(data)});"
             cur.execute(query, data)
             self.conn.commit()
     
@@ -44,7 +45,17 @@ class DatabaseClient:
         with self.conn.cursor() as cur:
             cur.execute(query)
             return cur.fetchall()
-    
+
+    def query_no_return(self, query_string: str) -> None:
+        with self.conn.cursor() as cur:
+            cur.execute(query_string)
+            self.conn.commit()
+
+    def read_max_id(self, table_name: str, id_col: str = "id") -> int:
+        with self.conn.cursor() as cur:
+            query = f"SELECT MAX({id_col}) FROM {table_name};"
+            return cur.execute(query).fetchall()[0][0]
+
     def update(self):
         raise NotImplementedError
     
