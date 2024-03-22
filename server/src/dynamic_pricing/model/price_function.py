@@ -18,12 +18,12 @@ def price_function_sigmoid(
     """
     For a given stock (x), obtain price (y) given parameters a, b, c for each product type
     :param stock:
-    :param a: horizontal transformation
-    :param b: vertical transformation
+    :param a: horizontal transformation (mean), a > 0
+    :param b: Increasing starting price value. b > 0
     :param c: shape transformation
     :return: price vector for each product type
     """
-    return c / (1 + np.exp(-stock+a)) + b
+    return b / (1 + np.exp((-stock+a)/c))
 
 
 if __name__ == "__main__":
