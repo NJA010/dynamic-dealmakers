@@ -60,8 +60,8 @@ def get_params(client: DatabaseClient) -> dict[str, np.ndarray]:
 
 
 def get_hardcoded_sigmoid_params() -> dict[str, np.ndarray]:
-    params = {"a": np.zeros((len(products), 1)),
-              "b": np.zeros((len(products), 1)),
-              "c": np.zeros((len(products), 1))
+    params = {"a": np.zeros((len(products), 1)) + 25,
+              "b": np.zeros((len(products), 1)) + 10,
+              "c": np.zeros((len(products), 1)) - 28 # High for low stock
               }
     return params
