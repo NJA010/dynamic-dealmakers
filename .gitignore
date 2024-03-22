@@ -9,7 +9,13 @@
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
-**/__pycache__/
+*/*/*/*/__pycache__/
+
+*/*/*/__pycache__/
+
+*/*/__pycache__/
+
+*/__pycache__/
 *.pyc
 
 # These are some examples of commonly ignored file patterns.
