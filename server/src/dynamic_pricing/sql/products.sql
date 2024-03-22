@@ -1,3 +1,4 @@
+INSERT INTO products
 WITH products AS (
   SELECT
     id,
