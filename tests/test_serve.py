@@ -19,3 +19,4 @@ def test_get_simple_prices(products):
         for uuid in result[product_name]:
             result[product_name][uuid] = 1.
     assert prices == result
+
