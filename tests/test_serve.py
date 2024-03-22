@@ -1,5 +1,5 @@
 import pytest
-from dynamic_pricing.model import get_simple_prices
+from dynamic_pricing.model.price_function import get_simple_prices
 import json
 from copy import deepcopy
 

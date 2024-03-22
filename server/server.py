@@ -1,6 +1,8 @@
 # from dynamic_pricing.price import Price
 from dynamic_pricing.scrape import scrape, get_requests_headers, api_key, audience
-from dynamic_pricing.model import get_simple_prices
+from dynamic_pricing.model.price_function import price_function_sigmoid, get_simple_prices
+from dynamic_pricing.utils import get_stock, get_params
+from dynamic_pricing.database import DatabaseClient, load_config
 from flask import Flask
 from dotenv import load_dotenv
 import json
@@ -30,6 +32,10 @@ def get_prices():
     #     product_data = json.load(file)
 
     result = get_simple_prices(product_data, low=3, high=100)
+    # client = DatabaseClient(load_config())
+    # stock = get_stock(client)
+    # params = get_params(client)
+    # result = price_function_sigmoid(stock, **params)
     return result
 
 
