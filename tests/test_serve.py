@@ -26,8 +26,9 @@ def products_table():
 
 def test_get_simple_prices(products):
     prices = get_simple_prices(products, 1, 1)
-    result = deepcopy(products)
-    for product_name in result.keys():
-        for uuid in result[product_name]:
+    result = {}
+    for product_name in products.keys():
+        result[product_name] = {}
+        for uuid in products[product_name]['products']:
             result[product_name][uuid] = 1.
     assert prices == result
