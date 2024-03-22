@@ -23,7 +23,7 @@ def pricing():
     logging.info("Scraping data...")
 
     scrape()
-    transform(endpoints=['products', 'prices'], incremental=True)
+    transform(endpoints=['products', 'prices', 'stocks'], incremental=True)
     return "Data scraped!"
 
 
