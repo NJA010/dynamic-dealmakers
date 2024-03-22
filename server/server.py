@@ -21,7 +21,7 @@ app = Flask(__name__)
 @app.route('/scrape-data', methods=['GET'])
 def pricing():
     logging.info("Scraping data...")
-    # scrape()
+    scrape()
     transform(endpoints=['products', 'prices'], incremental=True)
     return "Data scraped!"
 
