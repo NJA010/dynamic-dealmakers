@@ -25,9 +25,8 @@ tasks:
     dir: server
     cmds:
       - |
-        docker build --platform linux/amd64 -t europe-west1-docker.pkg.dev/dynamicdealmakers-7012254/dd-repo/dd_webshop:latest . -f Dockerfile
-        docker tag dd_webshop:latest europe-west1-docker.pkg.dev/dynamicdealmakers-7012254/dd-repo/dd_webshop:latest
-        docker push europe-west1-docker.pkg.dev/dynamicdealmakers-7012254/dd-repo/dd_webshop:latest
+        docker build --platform linux/amd64 -t europe-west1-docker.pkg.dev/dynamicdealmakers-7012254/dd-repo/dd_webshop:v0.0.1 . -f Dockerfile
+        docker push europe-west1-docker.pkg.dev/dynamicdealmakers-7012254/dd-repo/dd_webshop:v0.0.1
 
   apply_webshop:
     dir: infra/webshop
@@ -55,3 +54,8 @@ tasks:
     cmds:
       - task destroy_webshop
       - task destroy_artifact
+
+  request-cloud-scrape:
+    dir: server
+    cmds:
+      - 'curl --header "Authorization: Bearer $(gcloud auth print-identity-token)" {{.SERVICE_URL}}/scrape-data'

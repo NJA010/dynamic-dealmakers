@@ -15,15 +15,15 @@ resource "google_cloud_run_v2_service" "dd-service" {
 
   template {
     containers {
-      image = "europe-west1-docker.pkg.dev/dynamicdealmakers-7012254/dd-repo/dd_webshop:latest"
+      image = "europe-west1-docker.pkg.dev/dynamicdealmakers-7012254/dd-repo/dd_webshop:v0.0.1"
+
+      # env {
+      #   name  = "DATABASE_URL"
+      #   value = var.database_url
+      # }
 
       env {
-        name  = "DATABASE_URL"
-        value = var.database_url
-      }
-
-      env {
-        name  = "API_KEY"
+        name  = "TF_VAR_api_key"
         value = var.api_key
       }
 
