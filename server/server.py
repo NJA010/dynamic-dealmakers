@@ -32,8 +32,10 @@ def get_prices():
     db_client = DatabaseClient(load_config())
     query = "SELECT * FROM raw_products ORDER BY id DESC LIMIT 1"
     product_data: list = db_client.read(query)
+    with open('product_data.json', 'w') as file:	
+        json.dump(product_data, file, default=str) 	
 
-    result = get_simple_prices(product_data[0][2], low=1, high=7)
+    result = get_simple_prices(product_data, low=1, high=7)
 
     return json.dumps(result)
 
