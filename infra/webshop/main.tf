@@ -7,7 +7,7 @@ resource "google_project_service" "cloud_scheduler" {
   service = "cloudscheduler.googleapis.com"
 }
 
-# Create recourses
+# Create resources
 resource "google_cloud_run_v2_service" "dd-service" {
   name     = "dd-service"
   ingress  = "INGRESS_TRAFFIC_ALL"
@@ -15,18 +15,12 @@ resource "google_cloud_run_v2_service" "dd-service" {
 
   template {
     containers {
-      image = "europe-west1-docker.pkg.dev/dynamicdealmakers-7012254/dd-repo/dd_webshop:v0.0.1"
-
-      # env {
-      #   name  = "DATABASE_URL"
-      #   value = var.database_url
-      # }
+      image = "europe-west1-docker.pkg.dev/dynamicdealmakers-7012254/dd-repo/dd_webshop:v0.0.4"
 
       env {
         name  = "TF_VAR_api_key"
         value = var.api_key
       }
-
     }
   }
 
@@ -45,6 +39,21 @@ resource "google_cloud_run_service_iam_member" "scheduler_job_runner" {
   project = "dynamicdealmakers-7012254"
   role    = "roles/run.invoker"
   member  = "serviceAccount:${google_service_account.scheduler.email}"
+}
+
+resource "google_cloud_run_service_iam_member" "wesley" {
+  service = google_cloud_run_v2_service.dd-service.name
+  project = "dynamicdealmakers-7012254"
+  role    = "roles/run.invoker"
+  member  = "user:wboelrijk@xccelerated.io"
+}
+
+# whitelist all
+resource "google_cloud_run_service_iam_member" "all" {
+  service = google_cloud_run_v2_service.dd-service.name
+  project = "dynamicdealmakers-7012254"
+  role    = "roles/run.invoker"
+  member  = "allUsers"
 }
 
 resource "google_cloud_scheduler_job" "dd-scheduler" {
