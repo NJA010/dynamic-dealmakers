@@ -1,8 +1,9 @@
 # from dynamic_pricing.price import Price
-from dynamic_pricing.scrape import scrape, get_requests_headers, api_key, audience
+from dynamic_pricing.scrape import scrape, get_requests_headers, api_key, audience, transform
 from dynamic_pricing.model.price_function import price_function_sigmoid, get_simple_prices
 from dynamic_pricing.utils import get_stock, get_params
 from dynamic_pricing.database import DatabaseClient, load_config
+
 from flask import Flask
 from dotenv import load_dotenv
 import json
@@ -21,6 +22,7 @@ app = Flask(__name__)
 def pricing():
     logging.info("Scraping data...")
     scrape()
+    transform(endpoints=['products', 'prices'], incremental=True)
     return "Data scraped!"
 
 

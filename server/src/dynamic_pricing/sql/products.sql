@@ -1,3 +1,4 @@
+INSERT INTO products
 WITH products AS (
   SELECT
     id,
@@ -8,6 +9,7 @@ WITH products AS (
     raw_products,
     jsonb_each(payload) AS p(key, value),
     jsonb_each(p.value->'products') AS pp(key, value)
+  WHERE id > {{ max_id }}
   GROUP BY 1, 2, 3
 )
 
@@ -17,7 +19,7 @@ SELECT
   product_name,
   p.key AS batch_name,
   p.value->>'id' AS batch_id,
-  p.value->>'sell_by' AS batch_expiry_date
+  (p.value->>'sell_by')::TIMESTAMP AS batch_expiry_date
 FROM
   products,
   jsonb_each(batch_info) AS p(key, value);
