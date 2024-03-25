@@ -24,6 +24,8 @@ def price_function_sigmoid(
     :param c: shape transformation
     :return: price vector for each product type
     """
+    # data matrix is mixed so ensure stock is float here
+    stock = stock.astype(float)
     return b / (1 + np.exp(-np.divide(stock-a,c)))
 
 
