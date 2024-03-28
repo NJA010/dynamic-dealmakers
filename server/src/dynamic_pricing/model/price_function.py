@@ -1,4 +1,5 @@
 import numpy as np
+import jax.numpy as jnp
 
 
 def get_simple_prices(products: dict, low: int, high: int):
@@ -11,7 +12,7 @@ def get_simple_prices(products: dict, low: int, high: int):
 
 
 def price_function_sigmoid(
-        stock: np.ndarray,
+        stock: jnp.ndarray,
         a: np.ndarray,
         b: np.ndarray,
         c: np.ndarray
@@ -25,8 +26,8 @@ def price_function_sigmoid(
     :return: price vector for each product type
     """
     # data matrix is mixed so ensure stock is float here
-    stock = stock.astype(float)
-    return b / (1 + np.exp(-np.divide(stock-a,c)))
+    # stock = stock.astype(float)
+    return b / (1 + jnp.exp(-jnp.divide(stock-a,c)))
 
 
 if __name__ == "__main__":

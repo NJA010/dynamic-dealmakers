@@ -10,12 +10,13 @@ description = "Pricing model endpoint server"
 dependencies = [
     "psycopg2-binary==2.9.9",
     "pydantic==2.6.4",
+    "pydantic-settings==2.2.1",
     "pandas",
     "python-dotenv",
     "pydantic",
     "google-auth",
     "scipy",
-    "jax"
+    "jax[cpu]"
 ]
 
 [project.optional-dependencies]
