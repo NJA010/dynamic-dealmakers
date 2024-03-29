@@ -61,9 +61,9 @@ class DatabaseClient:
             cur.execute(query)
             return cur.fetchall()[0][0]
 
-    def insert_values(self, table_name: str, values: list[list[Any]]) -> None:
+    def insert_values(self, table_name: str, values: list[list[Any]], column_names: list[str]) -> None:
         with self.conn.cursor() as cur:
-            insert_query = sql.SQL(f"INSERT INTO {table_name} VALUES %s")
+            insert_query = sql.SQL(f"INSERT INTO {table_name} ({', '.join(column_names)}) VALUES %s")
             execute_values(cur, insert_query, values)
             self.conn.commit()
 

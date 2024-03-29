@@ -2,21 +2,19 @@ import os
 import logging
 from datetime import datetime
 from typing import Any, Optional
+import time
 
 import requests
 
 import google.auth.transport.requests
 import google.oauth2.id_token
-import jinja2
-from pathlib import Path
 
 from dynamic_pricing.database import load_config, DatabaseClient
 
 logging.basicConfig(level=logging.INFO)
 
 api_key = os.environ.get("TF_VAR_api_key")
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'pricing-prd-11719402-69eaf79e6222.json'
-audience = "https://api-4q7cwzagvq-ez.a.run.app" 
+audience = "https://api-4q7cwzagvq-ez.a.run.app"
 db = DatabaseClient(load_config())
 
 ENDPOINTS = ["prices", "products", "leaderboards", "stocks"]
@@ -45,7 +43,7 @@ def scrape(endpoints: Optional[list[str]] = None) -> None:
         logging.info(f"\nScraping data from {endpoint}...")
 
         # Get the data from the endpoint
-        data = requests.get(f"{audience}/{endpoint}", headers=headers).json()
+        data = requests.get(f"{audience}/{endpoint}", headers=headers)
 
         if data.status_code != 200:
             logging.error(
@@ -59,57 +57,74 @@ def scrape(endpoints: Optional[list[str]] = None) -> None:
         
         # Write the data to the database
         logging.info(f"Writing data from {endpoint} to the database...")
-        match endpoint:
-            case "prices":
-                output = unwrap_prices(data)
-            case "products":
-                output = unwrap_products(data)
-            case "stocks":
-                output = unwrap_stocks(data)
-            case _:
-                continue
+        try:
+            match endpoint:
+                case "prices":
+                    output = unwrap_prices(data.json())
+                    db.insert_values(endpoint, output, ['id', 'scraped_at', 'product_name', 'batch_name', 'competitor_name', 'competitor_price'])
+                case "products":
+                    output = unwrap_products(data.json())
+                    db.insert_values(endpoint, output, ['id', 'scraped_at', 'product_name', 'batch_key', 'batch_id', 'batch_expiry'])
+                case "stocks":
+                    output = unwrap_stocks(data.json())
+                    for row in output:
+                        try:
+                            last = db.read('SELECT stock_amount '
+                                    'FROM stocks '
+                                    f'WHERE batch_id={row[2]} '
+                                    'ORDER BY id DESC LIMIT 1')[0][0]
+                        except IndexError:
+                            last = 0
+                        row.append(last)
+                        row.append(int(row[3]) - int(row[4]))
+                    db.insert_values(endpoint, output, ['id', 'scraped_at', 'batch_id', 'stock_amount', 'prev_stock_amount', 'sold_stock'])
+                case _:
+                    continue
+        except KeyError:
+            logging.error(f"Could not unwrap json data for {endpoint}. Data: {data.json()}")
+            return
 
-        db.insert_values(endpoint, output)
         logging.info("Data written to the database!")
 
 
 def unwrap_products(response_data: dict[dict[Any]]) -> list[list[Any]]:
     now = datetime.now()
+    id = int(time.time())
     output = []
     for product_name, product_value in response_data.items():
         for batch_key, batch_values in product_value['products'].items():
-            output.append([now, product_name, batch_key, batch_values['id'], datetime.fromisoformat(batch_values['sell_by'])])
+            output.append([id, now, product_name, batch_key, batch_values['id'], datetime.fromisoformat(batch_values['sell_by'])])
 
     return output
 
 
 def unwrap_stocks(response_data: dict[dict[Any]]) -> list[list[Any]]:
     now = datetime.now()
+    id = int(time.time())
     output = []
     for key, value in response_data.items():
         for batch_id, stock_amount in value.items():
-            output.append([now, key, batch_id, stock_amount])
+            output.append([id, now, batch_id, stock_amount])
 
     return output
 
 
 def unwrap_prices(response_data: dict[dict[dict[Any]]]) -> list[list[Any]]:
     now = datetime.now()
+    id = int(time.time())
     output = []
     for product, value in response_data.items():
         for batch_id, competitor_data in value.items():
             for competitor_id, price in competitor_data.items():
-                output.append([now, product, batch_id, competitor_id, price])
+                output.append([id, now, product, batch_id, competitor_id, price])
 
     return output
 
+
 if __name__ == "__main__":
     import json
-    
-    headers = get_requests_headers(api_key, audience)
-    data = requests.get(f"{audience}/products", headers=headers).json()
 
-    # Write the data to a JSON file
-    with open("data.json", "w") as file:
-        json.dump(data, file)
+    scrape()
+    # data = requests.get(f"{audience}/products", headers=headers).json()
+
 
