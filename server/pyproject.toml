@@ -16,7 +16,8 @@ dependencies = [
     "pydantic",
     "google-auth",
     "scipy",
-    "jax[cpu]"
+    "jax[cpu]",
+    "google-cloud-secret-manager==2.19.0"
 ]
 
 [project.optional-dependencies]

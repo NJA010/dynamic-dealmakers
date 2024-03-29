@@ -1,0 +1,38 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -f
+      - Dockerfile
+      - -t
+      - europe-west1-docker.pkg.dev/$PROJECT_ID/dd-repo/dd_webshop_cicd:latest
+      - .
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - europe-west1-docker.pkg.dev/$PROJECT_ID/dd-repo/dd_webshop_cicd:latest
+  - name: eu.gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - dd-service-cicd
+      - --image
+      - europe-west1-docker.pkg.dev/$PROJECT_ID/dd-repo/dd_webshop_cicd:latest
+      - --region
+      - europe-west1
+      - --max-instances
+      - '100'
+      - --cpu
+      - '1'
+      - --memory
+      - 512Mi
+      - --timeout
+      - 300s
+      - --allow-unauthenticated
+      - --port
+      - '8080'
+      - --update-env-vars
+      - TF_VAR_api_key=${_API_KEY},PROJECT_ID=${PROJECT_ID},SECRET_ID=${_SECRET_NAME},VERSION_ID=latest
+images:
+  - europe-west1-docker.pkg.dev/$PROJECT_ID/dd-repo/dd_webshop_cicd:latest
