@@ -16,7 +16,9 @@ dependencies = [
     "pydantic",
     "google-auth",
     "scipy",
-    "jax[cpu]"
+    "jax[cpu]",
+    "requests",
+    "pytz"
 ]
 
 [project.optional-dependencies]

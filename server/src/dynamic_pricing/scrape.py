@@ -1,6 +1,7 @@
 import os
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
+import pytz
 from typing import Any, Optional
 import time
 import pytz
@@ -79,10 +80,11 @@ def scrape(endpoints: Optional[list[str]] = None) -> None:
                                     'FROM stocks '
                                     f'WHERE batch_id={row[2]} '
                                     'ORDER BY id DESC LIMIT 1')[0][0]
+                            row.append(last)
+                            row.append(int(row[4]) - int(row[3]))
                         except IndexError:
-                            last = 0
-                        row.append(last)
-                        row.append(int(row[4]) - int(row[3]))
+                            row.append(None)
+                            row.append(None)
                     db.insert_values(endpoint, output, ['id', 'scraped_at', 'batch_id', 'stock_amount', 'prev_stock_amount', 'sold_stock'])
                 case _:
                     continue
@@ -92,6 +94,9 @@ def scrape(endpoints: Optional[list[str]] = None) -> None:
 
         logging.info("Data written to the database!")
 
+        stale_cutoff = datetime.now(pytz.timezone('Europe/Amsterdam')) - timedelta(days=1)
+        db.query_no_return(f"DELETE FROM {endpoint} WHERE scraped_at < '{str(stale_cutoff)}'")
+        logging.info("Stale data has been removed")
 
 def unwrap_products(response_data: dict[dict[Any]], ts: datetime) -> list[list[Any]]:
     id = int(time.time())
