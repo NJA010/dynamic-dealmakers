@@ -75,7 +75,7 @@ def scrape(endpoints: Optional[list[str]] = None) -> None:
                                     f'WHERE batch_id={row[2]} '
                                     'ORDER BY id DESC LIMIT 1')[0][0]
                             row.append(last)
-                            row.append(int(row[3]) - int(row[4]))
+                            row.append(int(row[4]) - int(row[3]))
                         except IndexError:
                             row.append(None)
                             row.append(None)
