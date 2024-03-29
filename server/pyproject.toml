@@ -17,6 +17,7 @@ dependencies = [
     "google-auth",
     "scipy",
     "jax[cpu]",
+    "requests",
     "pytz"
 ]
 
