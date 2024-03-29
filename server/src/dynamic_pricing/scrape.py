@@ -15,6 +15,7 @@ logging.basicConfig(level=logging.INFO)
 
 api_key = os.environ.get("TF_VAR_api_key")
 audience = "https://api-4q7cwzagvq-ez.a.run.app"
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'pricing-prd-11719402-69eaf79e6222.json'
 db = DatabaseClient(load_config())
 
 ENDPOINTS = ["prices", "products", "leaderboards", "stocks"]
