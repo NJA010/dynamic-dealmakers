@@ -1,6 +1,9 @@
 from configparser import ConfigParser
+from typing import Any
+
 import psycopg2
-from psycopg2.extras import Json
+from psycopg2 import sql
+from psycopg2.extras import Json, execute_values
 import pytz
 from datetime import datetime
 from pathlib import Path
@@ -57,6 +60,12 @@ class DatabaseClient:
             query = f"SELECT MAX({id_col}) FROM {table_name};"
             cur.execute(query)
             return cur.fetchall()[0][0]
+
+    def insert_values(self, table_name: str, values: list[list[Any]], column_names: list[str]) -> None:
+        with self.conn.cursor() as cur:
+            insert_query = sql.SQL(f"INSERT INTO {table_name} ({', '.join(column_names)}) VALUES %s")
+            execute_values(cur, insert_query, values)
+            self.conn.commit()
 
     def update(self):
         raise NotImplementedError
