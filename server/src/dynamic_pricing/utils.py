@@ -1,5 +1,9 @@
+import time
+from typing import Any
+
 import numpy as np
 import pandas as pd
+import pytz
 
 from dynamic_pricing.database import DatabaseClient
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -22,7 +26,7 @@ products = [
     "beef",
     "avocado",
 ]
-team_names = ["DynamicDealmakers", "GenDP", "RedAlert", "random_competitor"]
+team_names = ["DynamicDealmakers", "GenDP", "RedAlert", "random_competitor", "ThePRIceIsRight"]
 
 product_index = {
     "apples-red": 0,
@@ -37,7 +41,7 @@ product_index = {
     "avocado": 9,
 }
 index_product = {value: key for key, value in product_index.items()}
-team_index = {"DynamicDealmakers": 0, "GenDP": 1, "RedAlert": 2, "random_competitor": 3}
+team_index = {"DynamicDealmakers": 0, "GenDP": 1, "RedAlert": 2, "random_competitor": 3, "ThePRIceIsRight": 4}
 index_team = {value: key for key, value in team_index.items()}
 
 
@@ -90,6 +94,15 @@ def save_params(params: dict):
         os.makedirs(save_loc)
     with open(save_loc / "opt_params.json", "w") as writer:
         json.dump(params, writer, indent=4)
+
+
+def unwrap_params(params: dict[dict[dict[Any]]]) -> list[list[Any]]:
+    amsterdam_tz = pytz.timezone("Europe/Amsterdam")
+    ts = datetime.datetime.now(amsterdam_tz)
+    output = []
+    for key, value in params.items():
+        output.append([ts, key, value])
+    return output
 
 
 def get_hardcoded_sigmoid_params() -> dict[str, np.ndarray]:
