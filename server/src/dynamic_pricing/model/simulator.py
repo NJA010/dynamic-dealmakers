@@ -1,3 +1,5 @@
+import json
+
 import numpy as np
 import jax.numpy as jnp
 from jax import jit, value_and_grad, random
@@ -17,10 +19,10 @@ from dynamic_pricing.utils import (
     SimulatorSettings,
     index_team,
     index_product,
-    save_params,
     team_names,
     products,
     get_prices,
+    unwrap_params
 )
 import logging
 
@@ -184,9 +186,9 @@ def run_simulation(df_price, stock, settings: SimulatorSettings):
     df_t_us = [
         jnp.array(
             df_price.loc[
-                (df_price.scraped_at == t) & (df_price.competitorname == team_index[settings.our_name]),
+                (df_price.scraped_at == t) & (df_price.competitor_name == team_index[settings.our_name]),
                 # drop time from columns because jax does not like time
-                ["competitorname", "product_name", "competitor_price"],
+                ["competitor_name", "product_name", "competitor_price"],
             ].to_numpy()
         )
         for t in sorted(df_price.time.unique())
@@ -194,9 +196,9 @@ def run_simulation(df_price, stock, settings: SimulatorSettings):
     df_t_comp = [
         jnp.array(
             df_price.loc[
-                (df_price.scraped_at == t) & (df_price.competitorname != team_index[settings.our_name]),
+                (df_price.scraped_at == t) & (df_price.competitor_name != team_index[settings.our_name]),
                 # drop time from columns because jax does not like time
-                ["competitorname", "product_name", "competitor_price"],
+                ["competitor_name", "product_name", "competitor_price"],
             ].to_numpy()
         )
         for t in sorted(df_price.time.unique())
@@ -284,14 +286,17 @@ if __name__ == "__main__":
     #             )
     #
     # # Create DataFrame
-    # df = pd.DataFrame(data, columns=["competitorname", "product_name", "scraped_at", "competitor_price"])
+    # df = pd.DataFrame(data, columns=["competitor_name", "product_name", "scraped_at", "competitor_price"])
 
     db_client = DatabaseClient(load_config())
     df_prices = get_prices(db_client)
 
     stock = {
         c: {p: settings.stock_start for p in product_index.keys()}
-        for c in df_prices.team.unique()
+        for c in df_prices.competitor_name.unique()
     }
     opt = run_simulation(df_prices, stock, settings)
-    save_params(opt)
+    # opt = json.load(open('./tests/opt_params.json'))
+    opt_list = unwrap_params(opt)
+    db_client.insert_values(table_name="params", values=opt_list, column_names=["calc_at", "product_name", "opt_params"])
+    logging.info("Sucessfully added parameters to the params table")

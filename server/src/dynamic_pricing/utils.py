@@ -1,5 +1,9 @@
+import time
+from typing import Any
+
 import numpy as np
 import pandas as pd
+import pytz
 
 from dynamic_pricing.database import DatabaseClient
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -90,6 +94,15 @@ def save_params(params: dict):
         os.makedirs(save_loc)
     with open(save_loc / "opt_params.json", "w") as writer:
         json.dump(params, writer, indent=4)
+
+
+def unwrap_params(params: dict[dict[dict[Any]]]) -> list[list[Any]]:
+    amsterdam_tz = pytz.timezone("Europe/Amsterdam")
+    ts = datetime.datetime.now(amsterdam_tz)
+    output = []
+    for key, value in params.items():
+        output.append([ts, key, value])
+    return output
 
 
 def get_hardcoded_sigmoid_params() -> dict[str, np.ndarray]:
