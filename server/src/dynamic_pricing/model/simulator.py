@@ -174,11 +174,7 @@ def simulate_trades(
 def run_simulation(df_price, stock, settings: SimulatorSettings):
     # set random seed
     initial_key = random.key(42)
-    randstock_gen = random_randint(
-        initial_key,
-        minval=settings.quantity_min,
-        maxval=settings.quantity_max,
-    )
+
     # convert string type to int
     df_price = df_price.replace(product_index).replace(team_index)
     # split data in TxMxN list of matrices per product
@@ -225,11 +221,16 @@ def run_simulation(df_price, stock, settings: SimulatorSettings):
         "c": jnp.zeros((10, 1)) - 20,  # High for low stock
     }
     opt_params = {}
+    res = 0
     # do simulation per product
     for prod, i in product_index.items():
         logging.info(f"Running optimization for: {prod}")
         x0 = jnp.concatenate([params["a"][i], params["b"][i], params["c"][i]])
-
+        randstock_gen = random_randint(
+            initial_key,
+            minval=settings.quantity[prod][0],
+            maxval=settings.quantity[prod][1],
+        )
         # a, b >0
         bounds = ((1, 200), (1, 50), (-50, 50))
         # r = simulate_trades(
@@ -258,16 +259,18 @@ def run_simulation(df_price, stock, settings: SimulatorSettings):
             options={"disp": True, "gtol": 1e-12},
             jac=True,
         )
+        res += -res.fun
         logging.info(
             f"Optimal parameters for {prod} is {res.x} with {-res.fun} revenue"
         )
         opt_params[prod] = [float(p) for p in res.x]
+    logging.info(f"Total revenue is {res}")
     return opt_params
 
 
 if __name__ == "__main__":
     settings = SimulatorSettings(
-        quantity_min=1, quantity_max=10, our_name="DynamicDealmakers", num_teams=len(team_names)
+        quantity_min=1, quantity_max=5, our_name="DynamicDealmakers", num_teams=len(team_names)
     )
     # # Define number of products and time periods
     # num_products = len(products)
@@ -300,7 +303,7 @@ if __name__ == "__main__":
     df_prices = get_prices(db_client)
 
     stock = {
-        c: {p: settings.stock_start for p in product_index.keys()}
+        c: {p: settings.stock_start[p] for p in product_index.keys()}
         for c in df_prices.competitor_name.unique()
     }
     opt = run_simulation(df_prices, stock, settings)
