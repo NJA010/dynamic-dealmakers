@@ -221,7 +221,7 @@ def run_simulation(df_price, stock, settings: SimulatorSettings):
         "c": jnp.zeros((10, 1)) - 20,  # High for low stock
     }
     opt_params = {}
-    res = 0
+    total_revenue = 0
     # do simulation per product
     for prod, i in product_index.items():
         logging.info(f"Running optimization for: {prod}")
@@ -259,12 +259,12 @@ def run_simulation(df_price, stock, settings: SimulatorSettings):
             options={"disp": True, "gtol": 1e-12},
             jac=True,
         )
-        res += -res.fun
+        total_revenue += -float(res.fun)
         logging.info(
             f"Optimal parameters for {prod} is {res.x} with {-res.fun} revenue"
         )
         opt_params[prod] = [float(p) for p in res.x]
-    logging.info(f"Total revenue is {res}")
+    logging.info(f"Total revenue is {total_revenue}")
     return opt_params
 
 
