@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 from dynamic_pricing.database import DatabaseClient
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -68,6 +69,19 @@ def get_params(client: DatabaseClient) -> dict[str, np.ndarray]:
         data = [dict(row) for row in data]
 
     return data
+
+
+def get_prices(client: DatabaseClient, interval: str = "1 hour"):
+    query = f"""
+    select 
+    *
+    from prices 
+    where 1=1 
+    and scraped_at >= (select max(scraped_at) from prices) - interval '{interval}' 
+    """
+    data, description = client.read_df(query)
+    df = pd.DataFrame(data, columns=[desc[0] for desc in description])
+    return df
 
 
 def save_params(params: dict):

@@ -8,6 +8,8 @@ import pandas as pd
 from jax._src.random import KeyArray
 from scipy.optimize import minimize, LinearConstraint, differential_evolution
 from typing import Generator
+
+from dynamic_pricing.database import DatabaseClient, load_config
 from dynamic_pricing.model.price_function import price_function_sigmoid
 from dynamic_pricing.utils import (
     product_index,
@@ -18,6 +20,7 @@ from dynamic_pricing.utils import (
     save_params,
     team_names,
     products,
+    get_prices,
 )
 import logging
 
@@ -181,9 +184,9 @@ def run_simulation(df_price, stock, settings: SimulatorSettings):
     df_t_us = [
         jnp.array(
             df_price.loc[
-                (df_price.time == t) & (df_price.team == team_index[settings.our_name]),
+                (df_price.scraped_at == t) & (df_price.competitorname == team_index[settings.our_name]),
                 # drop time from columns because jax does not like time
-                ["team", "product_type", "sell_price"],
+                ["competitorname", "product_name", "competitor_price"],
             ].to_numpy()
         )
         for t in sorted(df_price.time.unique())
@@ -191,9 +194,9 @@ def run_simulation(df_price, stock, settings: SimulatorSettings):
     df_t_comp = [
         jnp.array(
             df_price.loc[
-                (df_price.time == t) & (df_price.team != team_index[settings.our_name]),
+                (df_price.scraped_at == t) & (df_price.competitorname != team_index[settings.our_name]),
                 # drop time from columns because jax does not like time
-                ["team", "product_type", "sell_price"],
+                ["competitorname", "product_name", "competitor_price"],
             ].to_numpy()
         )
         for t in sorted(df_price.time.unique())
@@ -256,36 +259,39 @@ if __name__ == "__main__":
     settings = SimulatorSettings(
         quantity_min=1, quantity_max=10, our_name="Team_1", num_teams=len(team_names)
     )
-    # Define number of products and time periods
-    num_products = len(products)
-    num_periods = settings.periods
-    num_teams = settings.num_teams
+    # # Define number of products and time periods
+    # num_products = len(products)
+    # num_periods = settings.periods
+    # num_teams = settings.num_teams
+    #
+    # # Generate random data for selling price and quantity for each team
+    # data = []
+    # periods = pd.date_range(start="2024-01-01", periods=num_periods, freq="min")
+    #
+    # for team in range(num_teams):
+    #     np.random.seed(team)  # Setting seed to ensure same data for each team
+    #     selling_prices = np.random.uniform(0, 10, size=(num_products, num_periods))
+    #     team_name = team_names[team]
+    #     for j, product_name in enumerate(product_index.keys()):
+    #         for i, period in enumerate(periods):
+    #             data.append(
+    #                 [
+    #                     team_name,
+    #                     product_name,
+    #                     period,
+    #                     selling_prices[j, i],
+    #                 ]
+    #             )
+    #
+    # # Create DataFrame
+    # df = pd.DataFrame(data, columns=["competitorname", "product_name", "scraped_at", "competitor_price"])
 
-    # Generate random data for selling price and quantity for each team
-    data = []
-    periods = pd.date_range(start="2024-01-01", periods=num_periods, freq="min")
+    db_client = DatabaseClient(load_config())
+    df_prices = get_prices(db_client)
 
-    for team in range(num_teams):
-        np.random.seed(team)  # Setting seed to ensure same data for each team
-        selling_prices = np.random.uniform(0, 10, size=(num_products, num_periods))
-        team_name = team_names[team]
-        for j, product_name in enumerate(product_index.keys()):
-            for i, period in enumerate(periods):
-                data.append(
-                    [
-                        team_name,
-                        product_name,
-                        period,
-                        selling_prices[j, i],
-                    ]
-                )
-
-    # Create DataFrame
-    df = pd.DataFrame(data, columns=["team", "product_type", "time", "sell_price"])
     stock = {
         c: {p: settings.stock_start for p in product_index.keys()}
-        for c in df.team.unique()
+        for c in df_prices.team.unique()
     }
-
-    opt = run_simulation(df, stock, settings)
+    opt = run_simulation(df_prices, stock, settings)
     save_params(opt)
