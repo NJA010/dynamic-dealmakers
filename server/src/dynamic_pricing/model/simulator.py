@@ -216,7 +216,7 @@ def run_simulation(df_price, stock, settings: SimulatorSettings):
         x0 = jnp.concatenate([params["a"][i], params["b"][i], params["c"][i]])
 
         # a, b >0
-        bounds = ((1, 10), (-50, 50))
+        bounds = ((1, 200), (1, 20), (-50, 50))
         # r = simulate_trades(
         #     x0,
         #     [d[d[:, 1] == i] for d in df_t_us],
@@ -237,7 +237,7 @@ def run_simulation(df_price, stock, settings: SimulatorSettings):
                 randstock_gen,
             ),
             method="L-BFGS-B",
-            # bounds=bounds,
+            bounds=bounds,
             # seed=42,
             # disp=True
             options={"disp": True, "gtol": 1e-12},
