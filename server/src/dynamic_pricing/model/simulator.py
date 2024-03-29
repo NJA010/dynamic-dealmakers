@@ -2,6 +2,7 @@ import numpy as np
 import jax.numpy as jnp
 from jax import jit, value_and_grad, random
 from copy import deepcopy
+
 # from jax.scipy.optimize import minimize
 import pandas as pd
 from jax._src.random import KeyArray
@@ -15,6 +16,8 @@ from dynamic_pricing.utils import (
     index_team,
     index_product,
     save_params,
+    team_names,
+    products,
 )
 import logging
 
@@ -245,16 +248,18 @@ def run_simulation(df_price, stock, settings: SimulatorSettings):
         logging.info(
             f"Optimal parameters for {prod} is {res.x} with {-res.fun} revenue"
         )
-        opt_params[prod] = res.x
+        opt_params[prod] = [float(p) for p in res.x]
     return opt_params
 
 
 if __name__ == "__main__":
-    settings = SimulatorSettings(quantity_min=1, quantity_max=10, our_name="Team_1")
+    settings = SimulatorSettings(
+        quantity_min=1, quantity_max=10, our_name="Team_1", num_teams=len(team_names)
+    )
     # Define number of products and time periods
-    num_products = 10
+    num_products = len(products)
     num_periods = settings.periods
-    num_teams = 4
+    num_teams = settings.num_teams
 
     # Generate random data for selling price and quantity for each team
     data = []
@@ -263,7 +268,7 @@ if __name__ == "__main__":
     for team in range(num_teams):
         np.random.seed(team)  # Setting seed to ensure same data for each team
         selling_prices = np.random.uniform(0, 10, size=(num_products, num_periods))
-        team_name = f"Team_{team+1}"
+        team_name = team_names[team]
         for j, product_name in enumerate(product_index.keys()):
             for i, period in enumerate(periods):
                 data.append(

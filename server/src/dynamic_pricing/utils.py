@@ -21,6 +21,7 @@ products = [
     "beef",
     "avocado",
 ]
+team_names = ["DynamicDealmakers", "GenDP", "RedAlert", "random_competitor"]
 
 product_index = {
     "apples-red": 0,
@@ -35,7 +36,7 @@ product_index = {
     "avocado": 9,
 }
 index_product = {value: key for key, value in product_index.items()}
-team_index = {"Team_1": 0, "Team_2": 1, "Team_3": 2, "Team_4": 3}
+team_index = {"DynamicDealmakers": 0, "GenDP": 1, "RedAlert": 2, "random_competitor": 3}
 index_team = {value: key for key, value in team_index.items()}
 
 
@@ -92,3 +93,4 @@ class SimulatorSettings(BaseSettings):
     quantity_max: int = Field(default=5)
     stock_start: int = Field(default=100)
     our_name: str
+    num_teams: int
