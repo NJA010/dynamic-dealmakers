@@ -170,7 +170,6 @@ def run_simulation(df_price, stock, settings: SimulatorSettings):
         minval=settings.quantity_min,
         maxval=settings.quantity_max,
     )
-    our_name = "Team_1"
     # convert string type to int
     df_price = df_price.replace(product_index).replace(team_index)
     # split data in TxMxN list of matrices per product
@@ -179,7 +178,7 @@ def run_simulation(df_price, stock, settings: SimulatorSettings):
     df_t_us = [
         jnp.array(
             df_price.loc[
-                (df_price.time == t) & (df_price.team == 0),
+                (df_price.time == t) & (df_price.team == team_index[settings.our_name]),
                 # drop time from columns because jax does not like time
                 ["team", "product_type", "sell_price"],
             ].to_numpy()
@@ -189,7 +188,7 @@ def run_simulation(df_price, stock, settings: SimulatorSettings):
     df_t_comp = [
         jnp.array(
             df_price.loc[
-                (df_price.time == t) & (df_price.team != our_name),
+                (df_price.time == t) & (df_price.team != team_index[settings.our_name]),
                 # drop time from columns because jax does not like time
                 ["team", "product_type", "sell_price"],
             ].to_numpy()
@@ -216,7 +215,7 @@ def run_simulation(df_price, stock, settings: SimulatorSettings):
         x0 = jnp.concatenate([params["a"][i], params["b"][i], params["c"][i]])
 
         # a, b >0
-        bounds = ((1, 200), (1, 20), (-50, 50))
+        bounds = ((1, 200), (1, 50), (-50, 50))
         # r = simulate_trades(
         #     x0,
         #     [d[d[:, 1] == i] for d in df_t_us],
@@ -251,7 +250,7 @@ def run_simulation(df_price, stock, settings: SimulatorSettings):
 
 
 if __name__ == "__main__":
-    settings = SimulatorSettings(quantity_min=1, quantity_max=10)
+    settings = SimulatorSettings(quantity_min=1, quantity_max=10, our_name="Team_1")
     # Define number of products and time periods
     num_products = 10
     num_periods = settings.periods

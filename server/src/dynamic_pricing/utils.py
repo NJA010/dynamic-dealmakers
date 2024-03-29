@@ -91,3 +91,4 @@ class SimulatorSettings(BaseSettings):
     quantity_min: int = Field(default=1)
     quantity_max: int = Field(default=5)
     stock_start: int = Field(default=100)
+    our_name: str
