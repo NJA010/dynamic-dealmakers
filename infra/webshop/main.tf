@@ -15,7 +15,7 @@ resource "google_cloud_run_v2_service" "dd-service" {
 
   template {
     containers {
-      image = "europe-west1-docker.pkg.dev/dynamicdealmakers-7012254/dd-repo/dd_webshop:v0.0.6"
+      image = "europe-west1-docker.pkg.dev/dynamicdealmakers-7012254/dd-repo/dd_webshop:v0.0.7"
 
       env {
         name  = "TF_VAR_api_key"

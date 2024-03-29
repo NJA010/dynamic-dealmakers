@@ -4,6 +4,8 @@ from datetime import datetime
 import pytz
 from typing import Any, Optional
 import time
+import pytz
+import uuid
 
 import requests
 
@@ -59,16 +61,20 @@ def scrape(endpoints: Optional[list[str]] = None) -> None:
         
         # Write the data to the database
         logging.info(f"Writing data from {endpoint} to the database...")
+
+        amsterdam_tz = pytz.timezone('Europe/Amsterdam')
+        ts = datetime.now(amsterdam_tz)
+
         try:
             match endpoint:
                 case "prices":
-                    output = unwrap_prices(data.json())
+                    output = unwrap_prices(data.json(), ts)
                     db.insert_values(endpoint, output, ['id', 'scraped_at', 'product_name', 'batch_name', 'competitor_name', 'competitor_price'])
                 case "products":
-                    output = unwrap_products(data.json())
+                    output = unwrap_products(data.json(), ts)
                     db.insert_values(endpoint, output, ['id', 'scraped_at', 'product_name', 'batch_key', 'batch_id', 'batch_expiry'])
                 case "stocks":
-                    output = unwrap_stocks(data.json())
+                    output = unwrap_stocks(data.json(), ts)
                     for row in output:
                         try:
                             last = db.read('SELECT stock_amount '
@@ -90,36 +96,30 @@ def scrape(endpoints: Optional[list[str]] = None) -> None:
         logging.info("Data written to the database!")
 
 
-def unwrap_products(response_data: dict[dict[Any]]) -> list[list[Any]]:
-    now = datetime.now(pytz.timezone('Europe/Amsterdam'))
-    id = int(time.time())
+def unwrap_products(response_data: dict[dict[Any]], ts: datetime) -> list[list[Any]]:
     output = []
     for product_name, product_value in response_data.items():
         for batch_key, batch_values in product_value['products'].items():
-            output.append([id, now, product_name, batch_key, batch_values['id'], datetime.fromisoformat(batch_values['sell_by'])])
+            output.append([str(uuid.uuid4()), ts, product_name, batch_key, batch_values['id'], datetime.fromisoformat(batch_values['sell_by'])])
 
     return output
 
 
-def unwrap_stocks(response_data: dict[dict[Any]]) -> list[list[Any]]:
-    now = datetime.now(pytz.timezone('Europe/Amsterdam'))
-    id = int(time.time())
+def unwrap_stocks(response_data: dict[dict[Any]], ts: datetime) -> list[list[Any]]:
     output = []
     for key, value in response_data.items():
         for batch_id, stock_amount in value.items():
-            output.append([id, now, batch_id, stock_amount])
+            output.append([str(uuid.uuid4()), ts, batch_id, stock_amount])
 
     return output
 
 
-def unwrap_prices(response_data: dict[dict[dict[Any]]]) -> list[list[Any]]:
-    now = datetime.now(pytz.timezone('Europe/Amsterdam'))
-    id = int(time.time())
+def unwrap_prices(response_data: dict[dict[dict[Any]]], ts: datetime) -> list[list[Any]]:
     output = []
     for product, value in response_data.items():
         for batch_id, competitor_data in value.items():
             for competitor_id, price in competitor_data.items():
-                output.append([id, now, product, batch_id, competitor_id, price])
+                output.append([str(uuid.uuid4()), ts, product, batch_id, competitor_id, price])
 
     return output
 

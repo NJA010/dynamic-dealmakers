@@ -25,9 +25,8 @@ tasks:
     dir: server
     cmds:
       - |
-        docker build --platform linux/amd64 -t europe-west1-docker.pkg.dev/dynamicdealmakers-7012254/dd-repo/dd_webshop:v0.0.6 . -f Dockerfile
-        docker push europe-west1-docker.pkg.dev/dynamicdealmakers-7012254/dd-repo/dd_webshop:v0.0.6
-
+        docker build --platform linux/amd64 -t europe-west1-docker.pkg.dev/dynamicdealmakers-7012254/dd-repo/dd_webshop:v0.0.7 . -f Dockerfile
+        docker push europe-west1-docker.pkg.dev/dynamicdealmakers-7012254/dd-repo/dd_webshop:v0.0.7
   apply_webshop:
     dir: infra/webshop
     cmds:
