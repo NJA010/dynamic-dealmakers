@@ -63,10 +63,10 @@ def scrape(endpoints: Optional[list[str]] = None) -> None:
             match endpoint:
                 case "prices":
                     output = unwrap_prices(data.json())
-                    db.insert_values(endpoint, output, ['id', 'scraped_at', 'product_name', 'batch_name', 'competitor_name', 'competitor_price'])
+                    db.insert_values(endpoint, output, ['scraped_at', 'product_name', 'batch_name', 'competitor_name', 'competitor_price'])
                 case "products":
                     output = unwrap_products(data.json())
-                    db.insert_values(endpoint, output, ['id', 'scraped_at', 'product_name', 'batch_key', 'batch_id', 'batch_expiry'])
+                    db.insert_values(endpoint, output, ['scraped_at', 'product_name', 'batch_key', 'batch_id', 'batch_expiry'])
                 case "stocks":
                     output = unwrap_stocks(data.json())
                     for row in output:
@@ -80,7 +80,7 @@ def scrape(endpoints: Optional[list[str]] = None) -> None:
                         except IndexError:
                             row.append(None)
                             row.append(None)
-                    db.insert_values(endpoint, output, ['id', 'scraped_at', 'batch_id', 'stock_amount', 'prev_stock_amount', 'sold_stock'])
+                    db.insert_values(endpoint, output, ['scraped_at', 'batch_id', 'stock_amount', 'prev_stock_amount', 'sold_stock'])
                 case _:
                     continue
         except KeyError:
@@ -92,34 +92,31 @@ def scrape(endpoints: Optional[list[str]] = None) -> None:
 
 def unwrap_products(response_data: dict[dict[Any]]) -> list[list[Any]]:
     now = datetime.now(pytz.timezone('Europe/Amsterdam'))
-    id = int(time.time())
     output = []
     for product_name, product_value in response_data.items():
         for batch_key, batch_values in product_value['products'].items():
-            output.append([id, now, product_name, batch_key, batch_values['id'], datetime.fromisoformat(batch_values['sell_by'])])
+            output.append([now, product_name, batch_key, batch_values['id'], datetime.fromisoformat(batch_values['sell_by'])])
 
     return output
 
 
 def unwrap_stocks(response_data: dict[dict[Any]]) -> list[list[Any]]:
     now = datetime.now(pytz.timezone('Europe/Amsterdam'))
-    id = int(time.time())
     output = []
     for key, value in response_data.items():
         for batch_id, stock_amount in value.items():
-            output.append([id, now, batch_id, stock_amount])
+            output.append([now, batch_id, stock_amount])
 
     return output
 
 
 def unwrap_prices(response_data: dict[dict[dict[Any]]]) -> list[list[Any]]:
     now = datetime.now(pytz.timezone('Europe/Amsterdam'))
-    id = int(time.time())
     output = []
     for product, value in response_data.items():
         for batch_id, competitor_data in value.items():
             for competitor_id, price in competitor_data.items():
-                output.append([id, now, product, batch_id, competitor_id, price])
+                output.append([now, product, batch_id, competitor_id, price])
 
     return output
 
