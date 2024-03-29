@@ -1,6 +1,6 @@
 import os
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 import pytz
 from typing import Any, Optional
 import time
@@ -95,6 +95,9 @@ def scrape(endpoints: Optional[list[str]] = None) -> None:
 
         logging.info("Data written to the database!")
 
+        stale_cutoff = datetime.now(pytz.timezone('Europe/Amsterdam')) - timedelta(days=1)
+        db.query_no_return(f"DELETE FROM {endpoint} WHERE scraped_at < '{str(stale_cutoff)}'")
+        logging.info("Stale data has been removed")
 
 def unwrap_products(response_data: dict[dict[Any]], ts: datetime) -> list[list[Any]]:
     output = []
