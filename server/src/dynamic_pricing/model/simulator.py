@@ -22,7 +22,8 @@ from dynamic_pricing.utils import (
     team_names,
     products,
     get_prices,
-    unwrap_params
+    unwrap_params,
+    save_params
 )
 import logging
 
@@ -40,9 +41,9 @@ def price_calc(x0: jnp.ndarray, data, **kwargs) -> float:
     :param kwargs: additional parameters of price func
     :return: the revenue
     """
-    x0_matrix = x0.reshape(jnp.size(data[:, 1]), 3)
+    # x0_matrix = x0.reshape(jnp.size(data[:, 1]), 3)
 
-    p = price_function_sigmoid(data[:, -1], *x0_matrix.T, **kwargs)
+    p = price_function_sigmoid(data[:, -1], *x0, **kwargs)
 
     return p
 
@@ -183,6 +184,13 @@ def run_simulation(df_price, stock, settings: SimulatorSettings):
     # split data in TxMxN list of matrices per product
     # split data in out data and competitor data, only ours needs to be updated
     # T = time, M = competitors, N = products
+    df_price = (
+        df_price
+        .assign(competitor_price=df_price.competitor_price.astype(float))
+        .assign(competitor_name=df_price.competitor_name.astype(float))
+        .assign(product_name=df_price.product_name.astype(float))
+
+    )
     df_t_us = [
         jnp.array(
             df_price.loc[
@@ -191,7 +199,7 @@ def run_simulation(df_price, stock, settings: SimulatorSettings):
                 ["competitor_name", "product_name", "competitor_price"],
             ].to_numpy()
         )
-        for t in sorted(df_price.time.unique())
+        for t in sorted(df_price.scraped_at.unique())
     ]
     df_t_comp = [
         jnp.array(
@@ -201,7 +209,7 @@ def run_simulation(df_price, stock, settings: SimulatorSettings):
                 ["competitor_name", "product_name", "competitor_price"],
             ].to_numpy()
         )
-        for t in sorted(df_price.time.unique())
+        for t in sorted(df_price.scraped_at.unique())
     ]
     # convert team and product names to ints
     stock_mapped = {
@@ -259,7 +267,7 @@ def run_simulation(df_price, stock, settings: SimulatorSettings):
 
 if __name__ == "__main__":
     settings = SimulatorSettings(
-        quantity_min=1, quantity_max=10, our_name="Team_1", num_teams=len(team_names)
+        quantity_min=1, quantity_max=10, our_name="DynamicDealmakers", num_teams=len(team_names)
     )
     # # Define number of products and time periods
     # num_products = len(products)
@@ -296,6 +304,7 @@ if __name__ == "__main__":
         for c in df_prices.competitor_name.unique()
     }
     opt = run_simulation(df_prices, stock, settings)
+    save_params(opt)
     # opt = json.load(open('./tests/opt_params.json'))
     opt_list = unwrap_params(opt)
     db_client.insert_values(table_name="params", values=opt_list, column_names=["calc_at", "product_name", "opt_params"])

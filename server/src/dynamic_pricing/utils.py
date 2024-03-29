@@ -26,7 +26,7 @@ products = [
     "beef",
     "avocado",
 ]
-team_names = ["DynamicDealmakers", "GenDP", "RedAlert", "random_competitor"]
+team_names = ["DynamicDealmakers", "GenDP", "RedAlert", "random_competitor", "ThePRIceIsRight"]
 
 product_index = {
     "apples-red": 0,
@@ -41,7 +41,7 @@ product_index = {
     "avocado": 9,
 }
 index_product = {value: key for key, value in product_index.items()}
-team_index = {"DynamicDealmakers": 0, "GenDP": 1, "RedAlert": 2, "random_competitor": 3}
+team_index = {"DynamicDealmakers": 0, "GenDP": 1, "RedAlert": 2, "random_competitor": 3, "ThePRIceIsRight": 4}
 index_team = {value: key for key, value in team_index.items()}
 
 
