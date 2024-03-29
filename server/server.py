@@ -1,9 +1,8 @@
 # from dynamic_pricing.price import Price
 from dynamic_pricing.scrape import scrape, get_requests_headers, api_key, audience
-from dynamic_pricing.model.price_function import price_function_sigmoid, get_simple_prices
+from dynamic_pricing.model.price_function import price_function_sigmoid, get_simple_prices, get_optimized_prices
 from dynamic_pricing.utils import get_stock, get_params
 from dynamic_pricing.database import DatabaseClient, load_config
-
 from flask import Flask
 from dotenv import load_dotenv
 import json
@@ -29,13 +28,18 @@ def pricing():
 @app.route('/prices', methods=['GET'])
 def get_prices():
     logging.info("Getting prices...")
+    headers = get_requests_headers(api_key, audience)
+    products_data = requests.get(f"{audience}/products", headers=headers).json()
+    # stocks_data = requests.get(f"{audience}/stocks", headers=headers).json()
 
-    db_client = DatabaseClient(load_config())
-    query = "SELECT * FROM raw_products ORDER BY id DESC LIMIT 1"
-    product_data: list = db_client.read(query)
-
-    result = get_simple_prices(product_data[0][2], low=1, high=7)
+    result = get_simple_prices(products_data, low=1, high=7)
     logging.info("Prices obtained!")
+    # READ STOCK DATA
+    # stock = get_stock()
+    # params = requests.get(f"{audience}/params", headers=headers).json()
+    # result = get_optimized_prices(products_data, stocks_data, params)
+    # READ PARAMETERS
+    # OBTAIN PRICE
     return json.dumps(result)
 
 

@@ -67,6 +67,12 @@ class DatabaseClient:
             execute_values(cur, insert_query, values)
             self.conn.commit()
 
+
+    def read_df(self, query: str) -> (dict, list):
+        with self.conn.cursor() as cur:
+            cur.execute(query)
+            return cur.fetchall(), cur.description
+
     def update(self):
         raise NotImplementedError
     
