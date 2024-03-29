@@ -17,7 +17,6 @@ dependencies = [
     "google-auth",
     "scipy",
     "jax[cpu]",
-    "google-cloud-secret-manager==2.19.0",
     "requests",
     "pytz"
 ]
