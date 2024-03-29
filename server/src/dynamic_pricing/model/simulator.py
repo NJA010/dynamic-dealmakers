@@ -1,13 +1,21 @@
 import numpy as np
 import jax.numpy as jnp
 from jax import jit, value_and_grad, random
+from copy import deepcopy
 # from jax.scipy.optimize import minimize
 import pandas as pd
 from jax._src.random import KeyArray
 from scipy.optimize import minimize, LinearConstraint, differential_evolution
 from typing import Generator
 from dynamic_pricing.model.price_function import price_function_sigmoid
-from dynamic_pricing.utils import product_index, team_index, SimulatorSettings
+from dynamic_pricing.utils import (
+    product_index,
+    team_index,
+    SimulatorSettings,
+    index_team,
+    index_product,
+    save_params,
+)
 import logging
 
 global PRNG_KEY
@@ -74,11 +82,11 @@ def obtain_sale_data(
     data: jnp.ndarray,
     stock: dict[int, dict[int, int]],
     randstock_gen: Generator[int, None, None],
-):
+) -> (dict, float):
     # Extract relevant columns from the array
     teams = data[:, 0]
     product_types = data[:, 1]
-    sell_prices = data[:, 3]
+    sell_prices = data[:, 2]
 
     # Get unique product types
     unique_product_types = jnp.unique(product_types)
@@ -116,7 +124,7 @@ def obtain_sale_data(
                 "price": lowest_price,
                 "quantity": int(quantity),
             }
-            # store revenue
+            # store revenue if our team has best valid price
             if team_id_with_lowest_price == 0:
                 r = r + quantity * lowest_price
     return sale_data, jnp.sum(r)
@@ -126,12 +134,14 @@ def simulate_trades(
     x0: jnp.ndarray,
     data_us: list,
     data_competitor: list,
-    stock: dict[int, dict[int, int]],
+    original_stock: dict[int, dict[int, int]],
     randstock_gen: Generator[int, None, None],
     **kwargs,
-):
-    pred_revenue = 0
+) -> float:
 
+    stock = deepcopy(original_stock)
+    pred_revenue = 0.0
+    # x0 = jnp.concatenate([jnp.zeros((1,)) + 50, x0])
     for d_us_t, d_comp_t in zip(data_us, data_competitor):
         d_us_t = get_current_stock(d_us_t, stock)
         d_comp_t = get_current_stock(d_comp_t, stock)
@@ -145,7 +155,10 @@ def simulate_trades(
         pred_revenue += r
 
         stock = update_stock(sale_data, stock)
-
+        for pr, sale in sale_data.items():
+            logging.debug(
+                f"{sale['quantity']} {index_product[pr]} sold to {index_team[sale['team']]} at {sale['price']}"
+            )
     return -pred_revenue
 
 
@@ -203,30 +216,32 @@ def run_simulation(df_price, stock, settings: SimulatorSettings):
         x0 = jnp.concatenate([params["a"][i], params["b"][i], params["c"][i]])
 
         # a, b >0
-        bounds = ((1, 1000), (1, 20), (-50, 50))
-        # simulate_trades(
+        bounds = ((1, 10), (-50, 50))
+        # r = simulate_trades(
         #     x0,
         #     [d[d[:, 1] == i] for d in df_t_us],
         #     [d[d[:, 1] == i] for d in df_t_comp],
         #     stock_mapped,
         #     randstock_gen,
         # )
-        # obj_and_grad = value_and_grad(simulate_trades)
-        res = differential_evolution(
-            simulate_trades,
-            x0=x0,
+
+        # logging.info(r)
+        obj_and_grad = value_and_grad(simulate_trades)
+        res = minimize(
+            obj_and_grad,
+            x0,
             args=(
                 [d[d[:, 1] == i] for d in df_t_us],
                 [d[d[:, 1] == i] for d in df_t_comp],
                 stock_mapped,
                 randstock_gen,
             ),
-            # method="L-BFGS-B",
-            bounds=bounds,
-            seed=42,
-            disp=True
-            # options={"disp": True, "gtol": 1e-12},
-            # jac=True,
+            method="L-BFGS-B",
+            # bounds=bounds,
+            # seed=42,
+            # disp=True
+            options={"disp": True, "gtol": 1e-12},
+            jac=True,
         )
         logging.info(
             f"Optimal parameters for {prod} is {res.x} with {-res.fun} revenue"
@@ -236,7 +251,7 @@ def run_simulation(df_price, stock, settings: SimulatorSettings):
 
 
 if __name__ == "__main__":
-    settings = SimulatorSettings()
+    settings = SimulatorSettings(quantity_min=1, quantity_max=10)
     # Define number of products and time periods
     num_products = 10
     num_periods = settings.periods
@@ -248,7 +263,7 @@ if __name__ == "__main__":
 
     for team in range(num_teams):
         np.random.seed(team)  # Setting seed to ensure same data for each team
-        selling_prices = np.random.uniform(0, 2, size=(num_products, num_periods))
+        selling_prices = np.random.uniform(0, 10, size=(num_products, num_periods))
         team_name = f"Team_{team+1}"
         for j, product_name in enumerate(product_index.keys()):
             for i, period in enumerate(periods):
@@ -263,6 +278,10 @@ if __name__ == "__main__":
 
     # Create DataFrame
     df = pd.DataFrame(data, columns=["team", "product_type", "time", "sell_price"])
-    stock = {c: {p: 100 for p in product_index.keys()} for c in df.team.unique()}
+    stock = {
+        c: {p: settings.stock_start for p in product_index.keys()}
+        for c in df.team.unique()
+    }
 
     opt = run_simulation(df, stock, settings)
+    save_params(opt)

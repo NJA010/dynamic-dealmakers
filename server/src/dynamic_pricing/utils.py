@@ -3,6 +3,10 @@ import numpy as np
 from dynamic_pricing.database import DatabaseClient
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field
+import json
+import os
+from pathlib import Path
+import datetime
 
 
 products = [
@@ -30,15 +34,12 @@ product_index = {
     "beef": 8,
     "avocado": 9,
 }
-team_index = {
-    "Team_1": 0,
-    "Team_2": 1,
-    "Team_3": 2,
-    "Team_4": 3
-}
+index_product = {value: key for key, value in product_index.items()}
+team_index = {"Team_1": 0, "Team_2": 1, "Team_3": 2, "Team_4": 3}
+index_team = {value: key for key, value in team_index.items()}
 
 
-def get_stock(client: DatabaseClient) -> np.ndarray:
+def get_stock(client: DatabaseClient) -> list[dict]:
     """
     Obtain current stock, lets for now just return a single stock
     across batches
@@ -68,11 +69,20 @@ def get_params(client: DatabaseClient) -> dict[str, np.ndarray]:
     return data
 
 
+def save_params(params: dict):
+    save_loc = Path(f"./runs/{datetime.datetime.now(tz=datetime.timezone.utc)}/")
+    if not os.path.exists(save_loc):
+        os.makedirs(save_loc)
+    with open(save_loc / "opt_params.json", "w") as writer:
+        json.dump(params, writer, indent=4)
+
+
 def get_hardcoded_sigmoid_params() -> dict[str, np.ndarray]:
-    params = {"a": np.zeros((len(products), 1)) + 25,
-              "b": np.zeros((len(products), 1)) + 10,
-              "c": np.zeros((len(products), 1)) - 28 # High for low stock
-              }
+    params = {
+        "a": np.zeros((len(products), 1)) + 25,
+        "b": np.zeros((len(products), 1)) + 10,
+        "c": np.zeros((len(products), 1)) - 28,  # High for low stock
+    }
     return params
 
 
@@ -80,4 +90,4 @@ class SimulatorSettings(BaseSettings):
     periods: int = Field(default=60)
     quantity_min: int = Field(default=1)
     quantity_max: int = Field(default=5)
-
+    stock_start: int = Field(default=100)

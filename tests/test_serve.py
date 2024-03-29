@@ -1,7 +1,7 @@
 import pytest
 
 from dynamic_pricing.database import DatabaseClient, load_config
-from dynamic_pricing.model.price_function import get_simple_prices
+from dynamic_pricing.model.price_function import get_simple_prices, get_optimized_prices
 import json
 from copy import deepcopy
 
@@ -32,3 +32,11 @@ def test_get_simple_prices(products):
         for uuid in products[product_name]['products']:
             result[product_name][uuid] = 1.
     assert prices == result
+
+
+def test_get_optimized_prices(products):
+    params = json.load(open('./runs/{time}/opt_params.json'))
+    prices = get_optimized_prices(products, params)
+    for product_name in prices.keys():
+        for uuid in prices[product_name]:
+            assert type(prices[product_name][uuid]) == float
