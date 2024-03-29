@@ -1,6 +1,7 @@
 import os
 import logging
 from datetime import datetime
+import pytz
 from typing import Any, Optional
 import time
 
@@ -90,7 +91,7 @@ def scrape(endpoints: Optional[list[str]] = None) -> None:
 
 
 def unwrap_products(response_data: dict[dict[Any]]) -> list[list[Any]]:
-    now = datetime.now()
+    now = datetime.now(pytz.timezone('Europe/Amsterdam'))
     id = int(time.time())
     output = []
     for product_name, product_value in response_data.items():
@@ -101,7 +102,7 @@ def unwrap_products(response_data: dict[dict[Any]]) -> list[list[Any]]:
 
 
 def unwrap_stocks(response_data: dict[dict[Any]]) -> list[list[Any]]:
-    now = datetime.now()
+    now = datetime.now(pytz.timezone('Europe/Amsterdam'))
     id = int(time.time())
     output = []
     for key, value in response_data.items():
@@ -112,7 +113,7 @@ def unwrap_stocks(response_data: dict[dict[Any]]) -> list[list[Any]]:
 
 
 def unwrap_prices(response_data: dict[dict[dict[Any]]]) -> list[list[Any]]:
-    now = datetime.now()
+    now = datetime.now(pytz.timezone('Europe/Amsterdam'))
     id = int(time.time())
     output = []
     for product, value in response_data.items():
