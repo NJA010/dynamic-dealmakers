@@ -3,26 +3,39 @@ import logging
 from datetime import datetime
 from typing import Any, Optional
 import time
+import json
 
 import requests
 
 import google.auth.transport.requests
 import google.oauth2.id_token
 
-from dynamic_pricing.database import load_config, DatabaseClient
+from dynamic_pricing.database import load_config, get_secret, DatabaseClient
 
 logging.basicConfig(level=logging.INFO)
 
 api_key = os.environ.get("TF_VAR_api_key")
 audience = "https://api-4q7cwzagvq-ez.a.run.app"
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'pricing-prd-11719402-69eaf79e6222.json'
 db = DatabaseClient(load_config())
 
+PROJECT_ID = os.getenv('PROJECT_ID')
+SECRET_ID_SA = os.getenv('SECRET_ID_SA')
+VERSION_ID = os.getenv('VERSION_ID')
 ENDPOINTS = ["prices", "products", "leaderboards", "stocks"]
+old_creds = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
 
 
 # Function to get the headers
 def get_requests_headers(api_key, audience):
+    config = get_secret(
+        PROJECT_ID,
+        SECRET_ID_SA,
+        VERSION_ID,
+    )
+    out_file = open("config.json", "w") 
+    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'config.json'
+  
+    json.dump(config, out_file) 
     auth_req = google.auth.transport.requests.Request()
     id_token = google.oauth2.id_token.fetch_id_token(auth_req, audience)
 
@@ -38,7 +51,8 @@ def scrape(endpoints: Optional[list[str]] = None) -> None:
         endpoints = ENDPOINTS
 
     headers = get_requests_headers(api_key, audience)
-
+    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = old_creds
+    
     # Loop over every endpoint
     for endpoint in endpoints:
         logging.info(f"\nScraping data from {endpoint}...")

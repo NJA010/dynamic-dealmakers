@@ -3,7 +3,7 @@ steps:
     args:
       - build
       - -f
-      - Dockerfile
+      - server/Dockerfile
       - -t
       - europe-west1-docker.pkg.dev/$PROJECT_ID/dd-repo/dd_webshop_cicd:latest
       - .
