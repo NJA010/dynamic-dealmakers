@@ -1,5 +1,8 @@
 import os
 import logging
+from datetime import datetime
+from typing import Any, Optional
+
 import requests
 
 import google.auth.transport.requests
@@ -29,8 +32,12 @@ def get_requests_headers(api_key, audience):
         "Authorization": f"Bearer {id_token}",
     }
 
+
 # Function to scrape the data
-def scrape(endpoints: list[str] = ENDPOINTS) -> None:
+def scrape(endpoints: Optional[list[str]] = None) -> None:
+    if endpoints is None:
+        endpoints = ENDPOINTS
+
     headers = get_requests_headers(api_key, audience)
 
     # Loop over every endpoint
@@ -38,7 +45,7 @@ def scrape(endpoints: list[str] = ENDPOINTS) -> None:
         logging.info(f"\nScraping data from {endpoint}...")
 
         # Get the data from the endpoint
-        data = requests.get(f"{audience}/{endpoint}", headers=headers)
+        data = requests.get(f"{audience}/{endpoint}", headers=headers).json()
 
         if data.status_code != 200:
             logging.error(
@@ -52,33 +59,49 @@ def scrape(endpoints: list[str] = ENDPOINTS) -> None:
         
         # Write the data to the database
         logging.info(f"Writing data from {endpoint} to the database...")
-        db.create(
-            data=data.json(), 
-            table_name=f"raw_{endpoint}"
-        )
-        
+        match endpoint:
+            case "prices":
+                output = unwrap_prices(data)
+            case "products":
+                output = unwrap_products(data)
+            case "stocks":
+                output = unwrap_stocks(data)
+            case _:
+                continue
+
+        db.insert_values(endpoint, output)
         logging.info("Data written to the database!")
 
 
+def unwrap_products(response_data: dict[dict[Any]]) -> list[list[Any]]:
+    now = datetime.now()
+    output = []
+    for product_name, product_value in response_data.items():
+        for batch_key, batch_values in product_value['products'].items():
+            output.append([now, product_name, batch_key, batch_values['id'], datetime.fromisoformat(batch_values['sell_by'])])
 
-def transform(
-    endpoints: list[str] = ENDPOINTS,
-    incremental: bool = True
-) -> None:
+    return output
 
-    for endpoint in endpoints:
-        max_id = db.read_max_id(endpoint) if incremental else 0
-        max_id = max_id if max_id is not None else 0
-        
-        path = Path(__file__).parent / "sql" / f"{endpoint}.sql"
-        with open(path) as file:
-            environment = jinja2.Environment()
-            template = environment.from_string(file.read())
-            query = template.render(max_id=max_id)
-            db.query_no_return(query)
 
-        logging.info(f"Raw table tranformation for {endpoint} complete")
-        
+def unwrap_stocks(response_data: dict[dict[Any]]) -> list[list[Any]]:
+    now = datetime.now()
+    output = []
+    for key, value in response_data.items():
+        for batch_id, stock_amount in value.items():
+            output.append([now, key, batch_id, stock_amount])
+
+    return output
+
+
+def unwrap_prices(response_data: dict[dict[dict[Any]]]) -> list[list[Any]]:
+    now = datetime.now()
+    output = []
+    for product, value in response_data.items():
+        for batch_id, competitor_data in value.items():
+            for competitor_id, price in competitor_data.items():
+                output.append([now, product, batch_id, competitor_id, price])
+
+    return output
 
 if __name__ == "__main__":
     import json

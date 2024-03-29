@@ -1,5 +1,5 @@
 # from dynamic_pricing.price import Price
-from dynamic_pricing.scrape import scrape, get_requests_headers, api_key, audience, transform
+from dynamic_pricing.scrape import scrape, get_requests_headers, api_key, audience
 from dynamic_pricing.model.price_function import price_function_sigmoid, get_simple_prices
 from dynamic_pricing.utils import get_stock, get_params
 from dynamic_pricing.database import DatabaseClient, load_config
@@ -23,7 +23,6 @@ def pricing():
     logging.info("Scraping data...")
 
     scrape()
-    transform(endpoints=['products', 'prices', 'stocks'], incremental=True)
     return "Data scraped!"
 
 
@@ -36,7 +35,6 @@ def get_prices():
     product_data: list = db_client.read(query)
 
     result = get_simple_prices(product_data[0][2], low=1, high=7)
-
     logging.info("Prices obtained!")
     return json.dumps(result)
 
