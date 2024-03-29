@@ -22,20 +22,18 @@ PROJECT_ID = os.getenv('PROJECT_ID')
 SECRET_ID_SA = os.getenv('SECRET_ID_SA')
 VERSION_ID = os.getenv('VERSION_ID')
 ENDPOINTS = ["prices", "products", "leaderboards", "stocks"]
-old_creds = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
-
+config = get_secret(
+    PROJECT_ID,
+    SECRET_ID_SA,
+    VERSION_ID,
+)
 
 # Function to get the headers
 def get_requests_headers(api_key, audience):
-    config = get_secret(
-        PROJECT_ID,
-        SECRET_ID_SA,
-        VERSION_ID,
-    )
-    out_file = open("config.json", "w") 
-    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'config.json'
-  
-    json.dump(config, out_file) 
+    with open('/app/config.json', 'w') as out_file:
+        json.dump(config, out_file) 
+    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '/app/config.json'
+
     auth_req = google.auth.transport.requests.Request()
     id_token = google.oauth2.id_token.fetch_id_token(auth_req, audience)
 
@@ -51,7 +49,6 @@ def scrape(endpoints: Optional[list[str]] = None) -> None:
         endpoints = ENDPOINTS
 
     headers = get_requests_headers(api_key, audience)
-    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = old_creds
     
     # Loop over every endpoint
     for endpoint in endpoints:
