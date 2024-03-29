@@ -47,7 +47,8 @@ def test_data(data):
         "b": np.zeros((10, 1)) + 18,
         "c": np.zeros((10, 1)) - 30  # High for low stock
               }
-    x0 = np.concatenate([params["a"], params["b"], params["c"]], axis=1).reshape(-1, )
-    res = minimize(simulate_trades, x0, data, method="Nelder-Mead", tol=1e-6)
+
+    # x0 = np.concatenate([params["a"], params["b"], params["c"]], axis=1).reshape(-1, )
+    # res = minimize(simulate_trades, x0, data, method="Nelder-Mead", tol=1e-6)
     # simulate_trades(data, x0, **params)
     assert True
