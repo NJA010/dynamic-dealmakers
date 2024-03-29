@@ -260,11 +260,7 @@ def run_simulation(df_price, stock, settings: SimulatorSettings):
 
 if __name__ == "__main__":
     settings = SimulatorSettings(
-<<<<<<< Updated upstream
-        quantity_min=1, quantity_max=10, our_name="Team_1", num_teams=len(team_names)
-=======
         quantity_min=1, quantity_max=5, our_name="DynamicDealmakers", num_teams=len(team_names)
->>>>>>> Stashed changes
     )
     # # Define number of products and time periods
     # num_products = len(products)
@@ -297,13 +293,8 @@ if __name__ == "__main__":
     df_prices = get_prices(db_client)
 
     stock = {
-<<<<<<< Updated upstream
-        c: {p: settings.stock_start for p in product_index.keys()}
-        for c in df_prices.team.unique()
-=======
         c: {p: settings.stock_start[p] for p in product_index.keys()}
         for c in df_prices.competitor_name.unique()
->>>>>>> Stashed changes
     }
     opt = run_simulation(df_prices, stock, settings)
     save_params(opt)
