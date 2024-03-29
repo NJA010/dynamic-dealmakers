@@ -1,6 +1,7 @@
 import os
 import logging
 from datetime import datetime
+import pytz
 from typing import Any, Optional
 import time
 import pytz
@@ -80,10 +81,11 @@ def scrape(endpoints: Optional[list[str]] = None) -> None:
                                     'FROM stocks '
                                     f'WHERE batch_id={row[2]} '
                                     'ORDER BY id DESC LIMIT 1')[0][0]
+                            row.append(last)
+                            row.append(int(row[4]) - int(row[3]))
                         except IndexError:
-                            last = 0
-                        row.append(last)
-                        row.append(int(row[4]) - int(row[3]))
+                            row.append(None)
+                            row.append(None)
                     db.insert_values(endpoint, output, ['id', 'scraped_at', 'batch_id', 'stock_amount', 'prev_stock_amount', 'sold_stock'])
                 case _:
                     continue
