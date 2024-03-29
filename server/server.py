@@ -3,7 +3,6 @@ from dynamic_pricing.scrape import scrape, get_requests_headers, api_key, audien
 from dynamic_pricing.model.price_function import price_function_sigmoid, get_simple_prices
 from dynamic_pricing.utils import get_stock, get_params
 from dynamic_pricing.database import DatabaseClient, load_config
-
 from flask import Flask
 from dotenv import load_dotenv
 import json
@@ -36,6 +35,9 @@ def get_prices():
 
     result = get_simple_prices(product_data[0][2], low=1, high=7)
     logging.info("Prices obtained!")
+    # READ STOCK DATA
+    # READ PARAMETERS
+    # OBTAIN PRICE
     return json.dumps(result)
 
 

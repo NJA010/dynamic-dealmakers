@@ -5,7 +5,7 @@ from dynamic_pricing.model.price_function import get_simple_prices, get_optimize
 import json
 from copy import deepcopy
 
-from dynamic_pricing.utils import get_stock
+from dynamic_pricing.utils import get_stock, products
 
 
 @pytest.fixture()
@@ -35,8 +35,10 @@ def test_get_simple_prices(products):
 
 
 def test_get_optimized_prices(products):
-    params = json.load(open('./runs/{time}/opt_params.json'))
-    prices = get_optimized_prices(products, params)
+    # update with stock
+    params = json.load(open('./tests/opt_params.json'))
+    stock = {p: 50 for p in products}
+    prices = get_optimized_prices(products, params=params, stock=stock)
     for product_name in prices.keys():
         for uuid in prices[product_name]:
             assert type(prices[product_name][uuid]) == float

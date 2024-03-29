@@ -21,9 +21,9 @@ def get_optimized_prices(products: dict, stock: dict, params: dict):
     """
     for product_name in products.keys():
         for uuid in products[product_name]:
-            products[product_name][uuid] = price_function_sigmoid(
-                stock[product_name], jnp.array(params[product_name])
-            )
+            products[product_name][uuid] = float(price_function_sigmoid(
+                stock[product_name], *params[product_name]
+            ))
     return products
 
 
