@@ -20,11 +20,25 @@ def get_optimized_prices(products: dict, stock: dict, params: dict):
     :return:
     """
     result = {}
+    product_stock = {}
+    product_batch = {}
+    # obtain batch_id -> product_name map
+    for product_name in products.keys():
+        result[product_name] = {}
+        for uuid, value in products[product_name]['products'].items():
+            product_batch[str(value['id'])] = product_name
+    # obtain product_name -> total stock map
+    for batch_id, s in stock.items():
+        if product_batch[batch_id] in product_stock.keys():
+            product_stock[str(product_batch[batch_id])] += s
+        else:
+            product_stock[str(product_batch[batch_id])] = s
+
     for product_name in products.keys():
         result[product_name] = {}
         for uuid, value in products[product_name]['products'].items():
             result[product_name][uuid] = float(price_function_sigmoid(
-                stock[str(value['id'])], *params[product_name]
+                product_stock[product_name], *params[product_name]
             ))
     return result
 

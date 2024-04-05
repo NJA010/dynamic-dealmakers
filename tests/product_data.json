@@ -5,11 +5,11 @@
     "beef": {
       "products": {
         "beef_0ab33d48-7e8e-416d-a9c3-279058df1a2b": {
-          "id": 8,
+          "id": 1,
           "sell_by": "2024-03-22T12:50:01.133191"
         },
         "beef_a472b556-b65d-4292-8435-feef1818eeeb": {
-          "id": 8,
+          "id": 2,
           "sell_by": "2024-03-22T12:38:00.718458"
         }
       }
@@ -17,11 +17,11 @@
     "rice": {
       "products": {
         "rice_07d546eb-a6c4-4885-b703-eb76d9d44dab": {
-          "id": 8,
+          "id": 3,
           "sell_by": "2024-03-22T14:02:00.846936"
         },
         "rice_096999c5-aa4b-4795-ae0e-3aa3512f4ca0": {
-          "id": 8,
+          "id": 4,
           "sell_by": "2024-03-23T06:44:00.767703"
         }
       }
@@ -29,11 +29,11 @@
     "wine": {
       "products": {
         "wine_0255478d-fd00-4631-b5d9-029511ffae38": {
-          "id": 11,
+          "id": 5,
           "sell_by": "2024-03-22T13:40:01.228799"
         },
         "wine_03229199-44bd-4d3a-a65f-e093ca989268": {
-          "id": 11,
+          "id": 6,
           "sell_by": "2024-03-23T06:22:01.269590"
         }
       }
@@ -41,11 +41,11 @@
     "cheese": {
       "products": {
         "cheese_39cdb293-6e2e-4d4d-adbe-239227549086": {
-          "id": 11,
+          "id": 7,
           "sell_by": "2024-03-22T13:26:00.968258"
         },
         "cheese_575000d5-c0a3-4757-98fd-e1178ad3aa7d": {
-          "id": 3,
+          "id": 8,
           "sell_by": "2024-03-22T13:14:05.491807"
         }
       }
@@ -53,11 +53,11 @@
     "avocado": {
       "products": {
         "avocado_26e54c60-6f76-447c-a132-44c08ecadaeb": {
-          "id": 3,
+          "id": 9,
           "sell_by": "2024-03-22T12:44:05.491821"
         },
         "avocado_faa7878a-815c-4d4a-955d-8a59b9fe21b5": {
-          "id": 3,
+          "id": 10,
           "sell_by": "2024-03-22T12:56:00.968271"
         }
       }
@@ -65,11 +65,11 @@
     "bananas": {
       "products": {
         "bananas_355905ae-47b1-43f4-8679-cfe5e8a0df64": {
-          "id": 3,
+          "id": 11,
           "sell_by": "2024-03-22T13:14:05.491766"
         },
         "bananas_3df1b2b9-7563-461a-8c3a-19d436668e01": {
-          "id": 3,
+          "id": 12,
           "sell_by": "2024-03-22T13:26:00.968215"
         }
       }
@@ -77,11 +77,11 @@
     "broccoli": {
       "products": {
         "broccoli_79851ad7-5eea-4e22-a007-1a3392454af4": {
-          "id": 3,
+          "id": 13,
           "sell_by": "2024-03-22T13:14:05.491793"
         },
         "broccoli_7cf03a9a-fb29-48db-b7af-43d59c05e768": {
-          "id": 11,
+          "id": 14,
           "sell_by": "2024-03-22T13:02:01.042151"
         }
       }
@@ -89,11 +89,11 @@
     "apples-red": {
       "products": {
         "apples-red_57c3cf97-be48-45eb-8d45-a5ab236e43b6": {
-          "id": 3,
+          "id": 15,
           "sell_by": "2024-03-22T12:50:01.133066"
         },
         "apples-red_5db241d5-6164-4acb-8bd8-66a1c76f24a0": {
-          "id": 3,
+          "id": 16,
           "sell_by": "2024-03-22T13:02:01.042014"
         }
       }
@@ -101,11 +101,11 @@
     "apples-green": {
       "products": {
         "apples-green_2bfb1433-e28b-4dae-bf7f-e6d825beea30": {
-          "id": 3,
+          "id": 17,
           "sell_by": "2024-03-22T13:26:00.968192"
         },
         "apples-green_90e9e608-5511-4eff-ab81-f741e8a83c50": {
-          "id": 3,
+          "id": 18,
           "sell_by": "2024-03-22T13:02:01.042107"
         }
       }
@@ -113,11 +113,11 @@
     "bananas-organic": {
       "products": {
         "bananas-organic_011da286-5073-43c4-904c-2f80b1de4008": {
-          "id": 3,
+          "id": 19,
           "sell_by": "2024-03-22T12:38:00.718401"
         },
         "bananas-organic_1f25c22f-86dd-4991-ae9a-b761f8d99d29": {
-          "id": 3,
+          "id": 20,
           "sell_by": "2024-03-22T13:26:00.968230"
         }
       }
