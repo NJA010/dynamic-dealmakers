@@ -39,10 +39,17 @@ def get_prices():
         params = db.read("SELECT * from params ORDER BY calc_at DESC LIMIT 10")
         params_formatted = {row[2]: [float(p) for p in row[3]] for row in params}
         result = get_optimized_prices(products_data, stocks_data, params_formatted)
+        location = "optimized_prices"
     except Exception:
         result = get_simple_prices(products_data, low=1, high=7)
+        location = "simple_prices"
 
     logging.info("Prices obtained!")
+
+    # SAVES LOG TO DB
+    output = []
+    output.append([datetime.now(), json.dumps(result), location])
+    db.insert_values("prices_log", output, ["simulated_at", "result", "location"])
 
     return json.dumps(result)
 
