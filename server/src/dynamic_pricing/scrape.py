@@ -6,6 +6,7 @@ from typing import Any, Optional
 import time
 import pytz
 import uuid
+from dataclasses import dataclass
 
 import requests
 
@@ -21,7 +22,20 @@ audience = "https://api-4q7cwzagvq-ez.a.run.app"
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'pricing-prd-11719402-69eaf79e6222.json'
 db = DatabaseClient(load_config())
 
+@dataclass
+class TableConfig:
+    name: str
+    cutoff_interval_hours: int
+    time_column: str
+
 ENDPOINTS = ["prices", "products", "leaderboards", "stocks"]
+TABLE_CONFIGS = [
+    TableConfig('prices', 24, 'scraped_at'),
+    TableConfig('products', 24, 'scraped_at'),
+    TableConfig('leaderboards', 24, 'scraped_at'),
+    TableConfig('stocks', 24, 'scraped_at'),
+    TableConfig('prices_log', 24, 'scraped_at'),
+]
 
 
 # Function to get the headers
@@ -102,9 +116,11 @@ def scrape(endpoints: Optional[list[str]] = None) -> None:
 
         logging.info("Data written to the database!")
 
-        stale_cutoff = datetime.now(pytz.timezone('Europe/Amsterdam')) - timedelta(days=1)
-        db.query_no_return(f"DELETE FROM {endpoint} WHERE scraped_at < '{str(stale_cutoff)}'")
-        logging.info("Stale data has been removed")
+    clean_old_records(TABLE_CONFIGS)
+
+
+
+
 
 def unwrap_products(response_data: dict[str, dict[str, Any]], ts: datetime, id: int) -> list[list[Any]]:
     output = []
@@ -150,7 +166,15 @@ def get_max_id(connection, table_name: str, where: str) -> int:
         max_id += 1
     return max_id
 
-if __name__ == "__main__":
-    scrape(['leaderboards'])
 
+
+def clean_old_records(config: list[TableConfig]) -> None:
+    for conf in config:
+        stale_cutoff = datetime.now(pytz.timezone('Europe/Amsterdam')) - timedelta(hours=conf.cutoff_interval_hours)
+        db.query_no_return(f"DELETE FROM {conf.name} WHERE scraped_at < '{str(stale_cutoff)}'")
+        logging.info(f"Stale data for '{conf.name}' has been removed.")
+
+
+if __name__ == "__main__":
+    clean_old_records(TABLE_CONFIGS)
 
