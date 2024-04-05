@@ -13,29 +13,19 @@ import requests
 import google.auth.transport.requests
 import google.oauth2.id_token
 
-from dynamic_pricing.database import load_config, get_secret, DatabaseClient
+from dynamic_pricing.database import DatabaseClient
+from dynamic_pricing.env_setting import define_app_creds
 
 logging.basicConfig(level=logging.INFO)
 
+ENDPOINTS = ["prices", "products", "leaderboards", "stocks"]
+
 api_key = os.environ.get("TF_VAR_api_key")
 audience = "https://api-4q7cwzagvq-ez.a.run.app"
-db = DatabaseClient(load_config())
-
-PROJECT_ID = os.getenv('PROJECT_ID')
-SECRET_ID_SA = os.getenv('SECRET_ID_SA')
-VERSION_ID = os.getenv('VERSION_ID')
-ENDPOINTS = ["prices", "products", "leaderboards", "stocks"]
-config = get_secret(
-    PROJECT_ID,
-    SECRET_ID_SA,
-    VERSION_ID,
-)
 
 # Function to get the headers
 def get_requests_headers(api_key, audience):
-    with open('/app/config.json', 'w') as out_file:
-        json.dump(config, out_file) 
-    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '/app/config.json'
+    _ = define_app_creds()
 
     auth_req = google.auth.transport.requests.Request()
     id_token = google.oauth2.id_token.fetch_id_token(auth_req, audience)
@@ -48,6 +38,7 @@ def get_requests_headers(api_key, audience):
 
 # Function to scrape the data
 def scrape(endpoints: Optional[list[str]] = None) -> None:
+    db = DatabaseClient(load_config())
     if endpoints is None:
         endpoints = ENDPOINTS
 

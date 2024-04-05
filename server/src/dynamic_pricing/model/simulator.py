@@ -1,4 +1,5 @@
 import json
+import os
 
 import numpy as np
 import jax.numpy as jnp
@@ -13,6 +14,7 @@ from typing import Generator
 
 from dynamic_pricing.database import DatabaseClient, load_config
 from dynamic_pricing.model.price_function import price_function_sigmoid
+
 from dynamic_pricing.utils import (
     product_index,
     team_index,

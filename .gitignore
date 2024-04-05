@@ -26,6 +26,7 @@ __pycache__/
 # Node artifact files
 node_modules/
 dist/
+config.json
 
 # Compiled Java class files
 *.class

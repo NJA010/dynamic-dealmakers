@@ -9,40 +9,23 @@ from psycopg2.extras import Json, execute_values
 import pytz
 from datetime import datetime
 from pathlib import Path
-from google.cloud import secretmanager
 
+from dynamic_pricing.env_setting import define_app_creds, get_secret
+
+DEBUG = os.getenv('DEBUG', True) in ['true', 'True', True]
 PROJECT_ID = os.getenv('PROJECT_ID')
 SECRET_ID = os.getenv('SECRET_ID')
 VERSION_ID = os.getenv('VERSION_ID')
 
-def get_secret(project_id: str, secret_id: str, version_id: str):
-    """
-    Get information about the given secret. This only returns metadata about
-    the secret container, not any secret material.
-    """
-
-    # Create the Secret Manager client.
-    client = secretmanager.SecretManagerServiceClient()
-
-    # Build the resource name of the secret.
-    name = f"projects/{project_id}/secrets/{secret_id}/versions/{version_id}"
-    # Get the secret.
-    response = client.access_secret_version(request={"name": name})
-
-    # Print the secret payload.
-    payload = response.payload.data.decode("UTF-8")
-
-    # Print data about the secret.
-    return json.loads(payload)
-
-def load_config(filename='database.ini', section='postgresql', secret_manager=True) -> dict[str, str]:
-
-    if secret_manager:
+def load_config(filename='database.ini', section='postgresql') -> dict[str, str]:
+    _ = define_app_creds()
+    if not DEBUG:
+        # run in cloud
         return get_secret(
             project_id=PROJECT_ID,
             secret_id=SECRET_ID,
             version_id=VERSION_ID,
-            )
+            )        
 
     parser = ConfigParser()
     parser.read(filename)
