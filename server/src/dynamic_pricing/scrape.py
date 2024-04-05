@@ -135,10 +135,9 @@ def unwrap_prices(response_data: dict[str, dict[str, dict[str, Any]]], ts: datet
 
 
 def unwrap_leaderboards(response_data: dict[str, str], ts: datetime, id: int) -> list[list[Any]]:
-    
     output = []
     for team_name, score in response_data.items():
-        output.append([int, ts, team_name, score])
+        output.append([id, ts, team_name, score])
 
     return output
 
