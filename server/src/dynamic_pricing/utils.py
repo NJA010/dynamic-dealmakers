@@ -131,7 +131,7 @@ class SimulatorSettings(BaseSettings):
     quantity_min: int = Field(default=1)
     quantity_max: int = Field(default=5)
     quantity: dict = {
-        "apples-red": 55,
+        "apples-red": 78,
         "apples-green": 42,
         "bananas": 80,
         "bananas-organic": 21,
@@ -139,8 +139,8 @@ class SimulatorSettings(BaseSettings):
         "rice": 42,
         "wine": 16,
         "cheese": 11,
-        "beef": 11,
-        "avocado": 10,
+        "beef": 22,
+        "avocado": 12,
     }
     stock_start: dict = {
         "apples-red": 150,
