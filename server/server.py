@@ -91,9 +91,16 @@ def get_simulation():
     total_revenue = simulation_data.pop("total_revenue")
 
     output = []
-    output.append([datetime.now(), json.dumps(simulation_data), total_revenue])
+    ts = datetime.now()
+    max_id = db_client.read("SELECT MAX(id) from simulation")[0][0]
+    if max_id is None:
+        max_id = 1
+    else:
+        max_id += 1
+    for obj in simulation_data:
+        output.append([max_id, ts, obj, simulation_data[obj], total_revenue])
 
-    db_client.insert_values("simulation", output, ["simulated_at", "product_type", "total_revenue"])
+    db_client.insert_values("simulation", output, ["id", "simulated_at", "product_name", "params", "total_revenue"])
 
 
 if __name__ == '__main__':
