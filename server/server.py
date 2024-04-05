@@ -1,6 +1,7 @@
 # from dynamic_pricing.price import Price
 from dynamic_pricing.scrape import scrape, get_requests_headers, api_key, audience
 from dynamic_pricing.model.price_function import price_function_sigmoid, get_simple_prices, get_optimized_prices
+from dynamic_pricing.model.simulator import simulate
 from dynamic_pricing.utils import get_stock, get_params
 from dynamic_pricing.database import DatabaseClient, load_config
 from flask import Flask
@@ -44,6 +45,20 @@ def get_prices():
     logging.info("Prices obtained!")
 
     return json.dumps(result)
+
+
+@app.route('/simulate', methods=['GET'])
+def get_simulation():
+    logging.info("Starting simulation...")
+
+    simulation_data = simulate()
+    total_revenue = simulation_data.pop("total_revenue")
+
+    output = []
+    output.append([datetime.now(), json.dumps(simulation_data), total_revenue])
+
+    db = DatabaseClient(load_config())
+    db.insert_values("simulation", output, ["simulated_at", "product_type", "total_revenue"])
 
 
 if __name__ == '__main__':
