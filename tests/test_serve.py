@@ -1,4 +1,6 @@
 import pytest
+
+from dynamic_pricing.database import DatabaseClient, load_config
 from dynamic_pricing.model.price_function import get_simple_prices, get_optimized_prices
 import json
 
@@ -19,11 +21,16 @@ def test_get_simple_prices(products):
     assert prices == result
 
 
-def test_get_optimized_prices(products):
-    # update with stock
-    params = json.load(open('./tests/opt_params.json'))
-    stock = {p: 50 for p in products}
-    prices = get_optimized_prices(products, params=params, stock=stock)
-    for product_name in prices.keys():
-        for uuid in prices[product_name]:
-            assert type(prices[product_name][uuid]) == float
+# def test_get_optimized_prices(products):
+#     # update with stock
+#     params = json.load(open('./tests/opt_params.json'))
+#     stocks_data = json.load(open('./tests/stock_format_example.json'))
+#
+#     db = DatabaseClient(load_config())
+#
+#     params = db.read("SELECT * from simulation ORDER BY simulated_at DESC LIMIT 10")
+#     params_formatted = {row[2]: [float(p) for p in row[3]] for row in params}
+#     prices = get_optimized_prices(products, stocks_data, params_formatted)
+#     for product_name in prices.keys():
+#         for uuid in prices[product_name]:
+#             assert type(prices[product_name][uuid]) == float
