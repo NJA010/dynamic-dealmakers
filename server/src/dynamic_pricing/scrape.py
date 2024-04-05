@@ -116,6 +116,7 @@ def scrape(endpoints: Optional[list[str]] = None) -> None:
 
         logging.info("Data written to the database!")
 
+    clean_old_records(TABLE_CONFIGS)
 
 
 
