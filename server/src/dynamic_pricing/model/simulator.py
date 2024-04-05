@@ -31,7 +31,7 @@ import logging
 
 global PRNG_KEY
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logging.getLogger("jax").setLevel(logging.INFO)
 
 
@@ -156,7 +156,7 @@ def obtain_sale_data(
     unique_product_types = jnp.unique(product_types)
 
     # store revenue
-    total_revenue = []
+    total_revenue = 0
     sold_stock = {}
     # Iterate over each unique product type
     for product_type in unique_product_types:
@@ -184,10 +184,10 @@ def obtain_sale_data(
                 valid_indices=valid_indices,
                 current_time=current_time,
             )
-            total_revenue.append(r)
+            total_revenue+=r
         else:
             logging.debug(f"Time: {current_time}, No valid indices all out of stock")
-    return sold_stock, sum(total_revenue)
+    return sold_stock, total_revenue
 
 
 def simulate_trades(
@@ -224,7 +224,7 @@ def simulate_trades(
                 logging.debug(
                     f"at time: {current_time}, {single_sale['quantity']} {index_product[pr]} sold to "
                     f"{index_team[single_sale['team']]} at {single_sale['price']}"
-                    f"revenue: {single_sale['quantity']*single_sale['price']}"
+                    f"revenue: {pred_revenue}"
                 )
     return -pred_revenue
 
@@ -392,7 +392,7 @@ if __name__ == "__main__":
     total_revenue = simulation_data.pop("total_revenue")
 
     output = []
-    ts = datetime.now()
+    ts = datetime.datetime.now()
     max_id = db_client.read("SELECT MAX(id) from simulation")[0][0]
     if max_id is None:
         max_id = 1

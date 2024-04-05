@@ -22,9 +22,9 @@ def get_optimized_prices(products: dict, stock: dict, params: dict):
     result = {}
     for product_name in products.keys():
         result[product_name] = {}
-        for uuid in products[product_name]['products']:
+        for uuid, value in products[product_name]['products'].items():
             result[product_name][uuid] = float(price_function_sigmoid(
-                stock[product_name], *params[product_name]
+                stock[str(value['id'])], *params[product_name]
             ))
     return result
 

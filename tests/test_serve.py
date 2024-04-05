@@ -28,9 +28,11 @@ def test_get_simple_prices(products):
 #
 #     db = DatabaseClient(load_config())
 #
-#     params = db.read("SELECT * from simulation ORDER BY simulated_at DESC LIMIT 10")
+#     params = db.read("SELECT * from simulation where total_revenue = (select max(total_revenue) from simulation)")
 #     params_formatted = {row[2]: [float(p) for p in row[3]] for row in params}
 #     prices = get_optimized_prices(products, stocks_data, params_formatted)
+#     simp_prices = get_simple_prices(products, 1, 1)
+#
 #     for product_name in prices.keys():
 #         for uuid in prices[product_name]:
-#             assert type(prices[product_name][uuid]) == float
+#             assert type(prices[product_name][uuid]) == type(simp_prices[product_name][uuid])
