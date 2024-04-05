@@ -4,7 +4,7 @@
 *.terraform
 *.ini
 *.egg-info/
-/server/pricing-prd-11719402-69eaf79e6222.json
+pricing-prd-11719402-69eaf79e6222.json
 **/.terraform.lock.hcl
 server/runs/
 # Byte-compiled / optimized / DLL files

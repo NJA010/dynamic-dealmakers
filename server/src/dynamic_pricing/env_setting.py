@@ -28,7 +28,6 @@ def define_app_creds():
     PROJECT_ID = os.getenv('PROJECT_ID')
     SECRET_ID_SA = os.getenv('SECRET_ID_SA')
     VERSION_ID = os.getenv('VERSION_ID')
-    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'pricing-prd-11719402-69eaf79e6222.json'
     print(f'{DEBUG=}. If true, running locally, else in a container.')
     if not DEBUG:
         config = get_secret(
@@ -39,5 +38,6 @@ def define_app_creds():
         with open('/app/config.json', 'w') as out_file:
             json.dump(config, out_file)
         os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '/app/config.json'
-
+    else:
+        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'pricing-prd-11719402-69eaf79e6222.json'
 
