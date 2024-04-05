@@ -1,0 +1,11 @@
+version: '3'
+
+tasks:
+  deploy-evidence:
+    cmds:
+      - gcloud builds submit --config cloudbuild.yaml
+    
+  run-evidence: 
+    cmds: 
+      - npm run sources
+      - npm run build
