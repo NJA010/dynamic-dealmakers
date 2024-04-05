@@ -31,7 +31,7 @@ import logging
 
 global PRNG_KEY
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logging.getLogger("jax").setLevel(logging.INFO)
 
 
@@ -380,8 +380,8 @@ if __name__ == "__main__":
         }
         for c in team_names
     }
-    opt = run_simulation(df_prices, stock, settings)
-    save_params(opt)
+    simulation_data = run_simulation(df_prices, stock, settings)
+    save_params(simulation_data)
     # opt = json.load(open('./tests/opt_params.json'))
     # opt_list = unwrap_params(opt)
     # db_client.insert_values(
@@ -389,10 +389,17 @@ if __name__ == "__main__":
     #     values=opt_list,
     #     column_names=["calc_at", "product_name", "opt_params"],
     # )
-    total_revenue = opt.pop("total_revenue")
+    total_revenue = simulation_data.pop("total_revenue")
 
     output = []
-    output.append([datetime.datetime.now(), json.dumps(opt), total_revenue])
+    ts = datetime.now()
+    max_id = db_client.read("SELECT MAX(id) from simulation")[0][0]
+    if max_id is None:
+        max_id = 1
+    else:
+        max_id += 1
+    for obj in simulation_data:
+        output.append([max_id, ts, obj, simulation_data[obj], total_revenue])
 
-    db_client.insert_values("simulation", output, ["simulated_at", "product_type", "total_revenue"])
+    db_client.insert_values("simulation", output, ["id", "simulated_at", "product_name", "params", "total_revenue"])
     logging.info("Sucessfully added parameters to the params table")
