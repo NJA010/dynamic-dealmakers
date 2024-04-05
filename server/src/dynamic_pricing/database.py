@@ -67,7 +67,6 @@ class DatabaseClient:
             execute_values(cur, insert_query, values)
             self.conn.commit()
 
-
     def read_df(self, query: str) -> (dict, list):
         with self.conn.cursor() as cur:
             cur.execute(query)
@@ -78,5 +77,3 @@ class DatabaseClient:
     
     def delete(self):
         raise NotImplementedError
-
-    

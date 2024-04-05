@@ -56,7 +56,7 @@ def get_prices():
     # SAVES LOG TO DB
     output = []
     output.append([datetime.now(), json.dumps(result), location])
-    db.insert_values("prices_log", output, ["simulated_at", "result", "location"])
+    db.insert_values("prices_log", output, ["scraped_at", "result", "location"])
 
     return json.dumps(result)
 
