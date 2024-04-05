@@ -30,7 +30,8 @@ import logging
 
 global PRNG_KEY
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
+logging.getLogger("jax").setLevel(logging.INFO)
 
 
 def price_calc(x0: jnp.ndarray, data, **kwargs) -> float:
@@ -50,14 +51,13 @@ def price_calc(x0: jnp.ndarray, data, **kwargs) -> float:
 
 
 def update_stock(
-    sale_data: dict, stock: dict[int, dict[int, Stock]]
+    stock: dict[int, dict[int, Stock]],
+    current_time: int
 ) -> dict[int, dict[int, Stock]]:
-
-    # update stock
-    for product, sales_info in sale_data.items():
-        stock[sales_info["team"]][product].update(
-            quantity_sold=sales_info["quantity"], time=sales_info["current_time"]
-        )
+    # update stock for all teams
+    for team, product_stock in stock.items():
+        for s in product_stock.values():
+            s.update(time=current_time)
     return stock
 
 
@@ -91,12 +91,61 @@ def get_current_stock(
     return data
 
 
+def get_sold_stock(
+    product_type: int,
+    stock: dict[int, dict[int, Stock]],
+    valid_prices: jnp.ndarray,
+    valid_teams: jnp.ndarray,
+    quantity: int,
+    valid_indices: jnp.ndarray,
+    current_time: int,
+) -> (list[dict], float):
+    sold_stock = []
+    # sort indices based on prices
+    sorted_indices = valid_indices[valid_prices.argsort()]
+    # per valid team/price, obtain current stock and sell remainder to rest
+    i = 0
+    # store revenue
+    r = 0
+    team_sell = int(valid_teams[sorted_indices[i]])
+    while quantity > 0 and i< sorted_indices.size:
+        # obtain index/team corresponding to cheapest price
+        idx = sorted_indices[i]
+        # only sell once per team
+        if (team_sell == int(valid_teams[idx])) and i>0:
+            i+=1
+            continue
+        else:
+            team_sell = int(valid_teams[idx])
+        price_sell = float(valid_prices[idx].primal)
+        # check how much this team can sell and save
+        current_stock = stock[team_sell][int(product_type)].get_stock()
+        sale = min(current_stock, quantity)
+        sold_stock.append(
+            {
+                "team": team_sell,
+                "price": price_sell,
+                "quantity": sale,
+                "current_time": current_time,
+            }
+        )
+        # update stock
+        stock[team_sell][int(product_type)].update_sale(sale)
+        # store revenue if our team has best valid price
+        if team_sell == 0:
+            r = r + sale * price_sell
+        # in case 0<stock<quantity, sell remainder to next team
+        quantity -= sale
+        i += 1
+    return sold_stock, r
+
+
 def obtain_sale_data(
     data: jnp.ndarray,
     stock: dict[int, dict[int, Stock]],
-    randstock_gen: Generator[int, None, None],
-    current_time: int
-) -> (dict, float):
+    settings: SimulatorSettings,
+    current_time: int,
+) -> (list[dict], float):
     # Extract relevant columns from the array
     teams = data[:, 0]
     product_types = data[:, 1]
@@ -105,44 +154,39 @@ def obtain_sale_data(
     # Get unique product types
     unique_product_types = jnp.unique(product_types)
 
-    # Create dictionaries to store the lowest sell price and corresponding team
-    sale_data = {}
     # store revenue
-    r = 0
+    total_revenue = []
+    sold_stock = {}
     # Iterate over each unique product type
     for product_type in unique_product_types:
         # Find indices where the product type matches
         indices = jnp.where(product_types == product_type)[0]
         # sale quantity
-        quantity = next(randstock_gen)
-        # Filter out prices corresponding to teams with stock smaller than sell quantity
+        quantity = settings.quantity[index_product[int(product_type)]]
+        # Filter out prices corresponding to teams with empty stock
         # Make sure its a JAX array for slicing
         valid_indices = jnp.array(
             [
                 idx
                 for idx in indices
-                if stock[int(teams[idx])][int(product_type)].get_stock() >= quantity
+                if stock[int(teams[idx])][int(product_type)].get_stock() > 0
             ]
         )
-        if len(valid_indices) > 0:
-            prices_for_product_type = sell_prices[valid_indices]
-            # Find the index of the minimum sell price
-            min_price_index = jnp.argmin(prices_for_product_type)
-            # Use this index to get the corresponding team ID
-            team_id_with_lowest_price = teams[valid_indices[min_price_index]]
-            # Store the lowest price, corresponding team ID, quantity
-            lowest_price = prices_for_product_type[min_price_index]
 
-            sale_data[int(product_type)] = {
-                "team": int(team_id_with_lowest_price),
-                "price": lowest_price,
-                "quantity": int(quantity),
-                "current_time": current_time
-            }
-            # store revenue if our team has best valid price
-            if team_id_with_lowest_price == 0:
-                r = r + quantity * lowest_price
-    return sale_data, jnp.sum(r)
+        if len(valid_indices) > 0:
+            sold_stock[int(product_type)], r = get_sold_stock(
+                product_type=int(product_type),
+                stock=stock,
+                valid_prices=sell_prices[valid_indices],
+                valid_teams=teams[valid_indices],
+                quantity=quantity,
+                valid_indices=valid_indices,
+                current_time=current_time,
+            )
+            total_revenue.append(r)
+        else:
+            logging.debug(f"Time: {current_time}, No valid indices all out of stock")
+    return sold_stock, sum(total_revenue)
 
 
 def simulate_trades(
@@ -150,7 +194,7 @@ def simulate_trades(
     data_us: list,
     data_competitor: list,
     original_stock: dict[int, dict[int, Stock]],
-    randstock_gen: Generator[int, None, None],
+    settings: SimulatorSettings,
     **kwargs,
 ) -> float:
 
@@ -168,16 +212,19 @@ def simulate_trades(
         d_us_t = d_us_t.at[:, 2].set(price_calc(x0, d_us_t, **kwargs))
         # for all teams determine who made the sale
         sale_data, r = obtain_sale_data(
-            jnp.concatenate((d_us_t, d_comp_t)), stock, randstock_gen, current_time
+            jnp.concatenate((d_us_t, d_comp_t)), stock, settings, current_time
         )
         # update revenue
         pred_revenue += r
 
-        stock = update_stock(sale_data, stock)
-        for pr, sale in sale_data.items():
-            logging.debug(
-                f"{sale['quantity']} {index_product[pr]} sold to {index_team[sale['team']]} at {sale['price']}"
-            )
+        stock = update_stock(stock, current_time=current_time)
+        for pr, sales_info in sale_data.items():
+            for single_sale in sales_info:
+                logging.debug(
+                    f"at time: {current_time}, {single_sale['quantity']} {index_product[pr]} sold to "
+                    f"{index_team[single_sale['team']]} at {single_sale['price']}"
+                    f"revenue: {single_sale['quantity']*single_sale['price']}"
+                )
     return -pred_revenue
 
 
@@ -234,13 +281,9 @@ def run_simulation(df_price, stock, settings: SimulatorSettings):
     total_revenue = 0
     # do simulation per product
     for prod, i in product_index.items():
-        logging.info(f"Running optimization for: {prod}")
+        logging.info(f"Running optimization for: {prod} with time length: {len(df_t_us)}")
         x0 = jnp.concatenate([params["a"][i], params["b"][i], params["c"][i]])
-        randstock_gen = random_randint(
-            initial_key,
-            minval=settings.quantity[prod][0],
-            maxval=settings.quantity[prod][1],
-        )
+
         # a, b >0
         bounds = ((1, 200), (1, 50), (-50, 50))
         # r = simulate_trades(
@@ -260,7 +303,7 @@ def run_simulation(df_price, stock, settings: SimulatorSettings):
                 [d[d[:, 1] == i] for d in df_t_us],
                 [d[d[:, 1] == i] for d in df_t_comp],
                 stock_mapped,
-                randstock_gen,
+                settings,
             ),
             method="L-BFGS-B",
             bounds=bounds,
@@ -288,35 +331,38 @@ if __name__ == "__main__":
     )
     # GENERATE DATA
     # Define number of products and time periods
-    num_products = len(products)
-    num_periods = settings.periods
-    num_teams = settings.num_teams
-
-    # Generate random data for selling price and quantity for each team
-    data = []
-    periods = pd.date_range(start="2024-01-01", periods=num_periods, freq="min")
-
-    for team in range(num_teams):
-        np.random.seed(team)  # Setting seed to ensure same data for each team
-        selling_prices = np.random.uniform(0, 10, size=(num_products, num_periods))
-        team_name = team_names[team]
-        for j, product_name in enumerate(product_index.keys()):
-            for i, period in enumerate(periods):
-                data.append(
-                    [
-                        team_name,
-                        product_name,
-                        period,
-                        selling_prices[j, i],
-                    ]
-                )
-
-    # Create DataFrame
-    df_prices = pd.DataFrame(data, columns=["competitor_name", "product_name", "scraped_at", "competitor_price"])
+    # num_products = len(products)
+    # num_periods = settings.periods
+    # num_teams = settings.num_teams
+    #
+    # # Generate random data for selling price and quantity for each team
+    # data = []
+    # periods = pd.date_range(start="2024-01-01", periods=num_periods, freq="min")
+    #
+    # for team in range(num_teams):
+    #     np.random.seed(team)  # Setting seed to ensure same data for each team
+    #     selling_prices = np.random.uniform(0, 10, size=(num_products, num_periods))
+    #     team_name = team_names[team]
+    #     for j, product_name in enumerate(product_index.keys()):
+    #         for i, period in enumerate(periods):
+    #             data.append(
+    #                 [
+    #                     team_name,
+    #                     product_name,
+    #                     period,
+    #                     selling_prices[j, i],
+    #                 ]
+    #             )
+    #
+    # # Create DataFrame
+    # df_prices = pd.DataFrame(
+    #     data,
+    #     columns=["competitor_name", "product_name", "scraped_at", "competitor_price"],
+    # )
 
     # DATABASE
-    # db_client = DatabaseClient(load_config())
-    # df_prices = get_prices(db_client)
+    db_client = DatabaseClient(load_config())
+    df_prices = get_prices(db_client, interval='1 hour')
 
     # READ LOCAl JSON
     # df_prices = pd.read_json("./prices.json")

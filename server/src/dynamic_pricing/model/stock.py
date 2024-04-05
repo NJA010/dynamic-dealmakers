@@ -13,14 +13,16 @@ class Stock:
         self.restock_interval = restock_interval
         self.expire_interval = expire_interval
 
-    def update(self, quantity_sold: int, time: int):
+    def update_sale(self,quantity_sold:int):
         # quantity sold
         self.stock -= quantity_sold
+
+    def update(self, time: int):
         # expire products
-        if (time % self.expire_interval) == 0:
+        if ((time % self.expire_interval) == 0) and (time > 0):
             self.expire()
         # restock event
-        if (time % self.restock_interval) == 0:
+        if ((time % self.restock_interval) == 0) and (time > 0):
             self.restock()
 
     def initialize(self):
@@ -45,7 +47,7 @@ class Stock:
         batches are the same size and expire date is per batch
         :return:
         """
-        self.stock -= self.restock_amount
+        self.stock = max(0, self.stock - self.restock_amount)
 
     def get_stock(self) -> int:
         return self.stock
