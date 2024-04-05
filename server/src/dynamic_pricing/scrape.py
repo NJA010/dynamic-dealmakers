@@ -87,6 +87,9 @@ def scrape(endpoints: Optional[list[str]] = None) -> None:
                             row.append(None)
                             row.append(None)
                     db.insert_values(endpoint, output, ['scraped_at', 'batch_id', 'stock_amount', 'prev_stock_amount', 'sold_stock'])
+                case "leaderboards":
+                    output = unwrap_leaderboards(data.json(), ts)
+                    db.insert_values(endpoint, output, ['scraped_at', 'team_name', 'score'])
                 case _:
                     continue
         except KeyError:
@@ -99,7 +102,7 @@ def scrape(endpoints: Optional[list[str]] = None) -> None:
         db.query_no_return(f"DELETE FROM {endpoint} WHERE scraped_at < '{str(stale_cutoff)}'")
         logging.info("Stale data has been removed")
 
-def unwrap_products(response_data: dict[dict[Any]], ts: datetime) -> list[list[Any]]:
+def unwrap_products(response_data: dict[str, dict[str, Any]], ts: datetime) -> list[list[Any]]:
     output = []
     for product_name, product_value in response_data.items():
         for batch_key, batch_values in product_value['products'].items():
@@ -108,7 +111,7 @@ def unwrap_products(response_data: dict[dict[Any]], ts: datetime) -> list[list[A
     return output
 
 
-def unwrap_stocks(response_data: dict[dict[Any]], ts: datetime) -> list[list[Any]]:
+def unwrap_stocks(response_data: dict[str, dict[str, Any]], ts: datetime) -> list[list[Any]]:
     output = []
     for key, value in response_data.items():
         for batch_id, stock_amount in value.items():
@@ -117,7 +120,7 @@ def unwrap_stocks(response_data: dict[dict[Any]], ts: datetime) -> list[list[Any
     return output
 
 
-def unwrap_prices(response_data: dict[dict[dict[Any]]], ts: datetime) -> list[list[Any]]:
+def unwrap_prices(response_data: dict[str, dict[str, dict[str, Any]]], ts: datetime) -> list[list[Any]]:
     output = []
     for product, value in response_data.items():
         for batch_id, competitor_data in value.items():
@@ -127,10 +130,15 @@ def unwrap_prices(response_data: dict[dict[dict[Any]]], ts: datetime) -> list[li
     return output
 
 
-if __name__ == "__main__":
-    import json
+def unwrap_leaderboards(response_data: dict[str, str], ts: datetime) -> list[list[Any]]:
+    
+    output = []
+    for team_name, score in response_data.items():
+        output.append([ts, team_name, score])
 
-    scrape()
-    # data = requests.get(f"{audience}/products", headers=headers).json()
+    return output
+
+if __name__ == "__main__":
+    scrape(['leaderboards'])
 
 
