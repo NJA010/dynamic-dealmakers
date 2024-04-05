@@ -2,7 +2,6 @@
 name: dynamic-dealmakers
 type: postgres
 options:
-  connectionString: postgresql://dynamic-dealmakers_owner:OrxUB9RqlNI5@ep-jolly-breeze-a25bcwyt.eu-central-1.aws.neon.tech:5432/dynamic-dealmakers?sslmode=no-verify
 
   # host: ep-jolly-breeze-a25bcwyt.eu-central-1.aws.neon.tech
   # port: 5432
