@@ -1,8 +1,15 @@
 # from dynamic_pricing.price import Price
+from dynamic_pricing.model.stock import Stock
 from dynamic_pricing.scrape import scrape, get_requests_headers, api_key, audience
-from dynamic_pricing.model.price_function import price_function_sigmoid, get_simple_prices, get_optimized_prices
-from dynamic_pricing.model.simulator import simulate
-from dynamic_pricing.utils import get_stock, get_params
+from dynamic_pricing.model.price_function import get_simple_prices, get_optimized_prices
+from dynamic_pricing.model.simulator import run_simulation
+from dynamic_pricing.utils import (
+    get_stock,
+    get_params,
+    SimulatorSettings,
+    team_names,
+    product_index,
+)
 from dynamic_pricing.database import DatabaseClient, load_config
 from flask import Flask
 from dotenv import load_dotenv
@@ -33,10 +40,10 @@ def get_prices():
     products_data = requests.get(f"{audience}/products", headers=headers).json()
     stocks_data = requests.get(f"{audience}/stocks", headers=headers).json()
 
+    db = DatabaseClient(load_config())
     # READ STOCK DATA
     try:
-        db = DatabaseClient(load_config())
-        params = db.read("SELECT * from params ORDER BY calc_at DESC LIMIT 10")
+        params = db.read("SELECT * from simulation ORDER BY calc_at DESC LIMIT 10")
         params_formatted = {row[2]: [float(p) for p in row[3]] for row in params}
         result = get_optimized_prices(products_data, stocks_data, params_formatted)
         location = "optimized_prices"
@@ -57,15 +64,36 @@ def get_prices():
 @app.route('/simulate', methods=['GET'])
 def get_simulation():
     logging.info("Starting simulation...")
-
-    simulation_data = simulate()
+    settings = SimulatorSettings(
+        quantity_min=1,
+        quantity_max=5,
+        our_name="DynamicDealmakers",
+        num_teams=len(team_names),
+    )
+    # set starting stock levels
+    stock = {
+        c: {
+            p: Stock(
+                name=p,
+                restock_amount=settings.stock_start[p],
+                restock_interval=settings.restock_interval[p],
+                expire_interval=settings.expire_interval[p],
+            )
+            for p in product_index.keys()
+        }
+        for c in team_names
+    }
+    # obtain prices data
+    db_client = DatabaseClient(load_config())
+    df_prices = get_prices(db_client, interval='5 hour')
+    # run simulation
+    simulation_data = run_simulation(df_prices, stock, settings)
     total_revenue = simulation_data.pop("total_revenue")
 
     output = []
     output.append([datetime.now(), json.dumps(simulation_data), total_revenue])
 
-    db = DatabaseClient(load_config())
-    db.insert_values("simulation", output, ["simulated_at", "product_type", "total_revenue"])
+    db_client.insert_values("simulation", output, ["simulated_at", "product_type", "total_revenue"])
 
 
 if __name__ == '__main__':

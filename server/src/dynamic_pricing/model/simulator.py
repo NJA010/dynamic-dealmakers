@@ -1,3 +1,4 @@
+import datetime
 import json
 
 import numpy as np
@@ -388,4 +389,10 @@ if __name__ == "__main__":
     #     values=opt_list,
     #     column_names=["calc_at", "product_name", "opt_params"],
     # )
+    total_revenue = opt.pop("total_revenue")
+
+    output = []
+    output.append([datetime.datetime.now(), json.dumps(opt), total_revenue])
+
+    db_client.insert_values("simulation", output, ["simulated_at", "product_type", "total_revenue"])
     logging.info("Sucessfully added parameters to the params table")
