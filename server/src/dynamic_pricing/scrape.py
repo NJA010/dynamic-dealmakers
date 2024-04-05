@@ -130,13 +130,13 @@ def unwrap_prices(response_data: dict[str, dict[str, dict[str, Any]]], ts: datet
     return output
 
 
-def unwrap_leaderboards(response_data: dict[str, dict[str, dict[str, Any]]], ts: datetime) -> list[list[Any]]:
+def unwrap_leaderboards(response_data: dict[str, str], ts: datetime) -> list[list[Any]]:
+    
     output = []
     for team_name, score in response_data.items():
         output.append([ts, team_name, score])
 
     return output
-
 
 if __name__ == "__main__":
     scrape(['leaderboards'])
