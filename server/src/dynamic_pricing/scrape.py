@@ -68,13 +68,16 @@ def scrape(endpoints: Optional[list[str]] = None) -> None:
         try:
             match endpoint:
                 case "prices":
-                    output = unwrap_prices(data.json(), ts)
+                    max_id = get_max_id(db, 'prices', 'WHERE id < 1000000000')
+                    output = unwrap_prices(data.json(), ts, max_id)
                     db.insert_values(endpoint, output, ['scraped_at', 'product_name', 'batch_name', 'competitor_name', 'competitor_price'])
                 case "products":
-                    output = unwrap_products(data.json(), ts)
+                    max_id = get_max_id(db, 'products', 'WHERE id < 1000000000')
+                    output = unwrap_products(data.json(), ts, max_id)
                     db.insert_values(endpoint, output, ['scraped_at', 'product_name', 'batch_key', 'batch_id', 'batch_expiry'])
                 case "stocks":
-                    output = unwrap_stocks(data.json(), ts)
+                    max_id = get_max_id(db, 'stocks', 'WHERE id < 1000000000')
+                    output = unwrap_stocks(data.json(), ts, max_id)
                     for row in output:
                         try:
                             last = db.read('SELECT stock_amount '
@@ -88,7 +91,8 @@ def scrape(endpoints: Optional[list[str]] = None) -> None:
                             row.append(None)
                     db.insert_values(endpoint, output, ['scraped_at', 'batch_id', 'stock_amount', 'prev_stock_amount', 'sold_stock'])
                 case "leaderboards":
-                    output = unwrap_leaderboards(data.json(), ts)
+                    max_id = get_max_id(db, 'leaderboards', 'WHERE id < 1000000000')
+                    output = unwrap_leaderboards(data.json(), ts, max_id)
                     db.insert_values(endpoint, output, ['scraped_at', 'team_name', 'score'])
                 case _:
                     continue
@@ -102,41 +106,50 @@ def scrape(endpoints: Optional[list[str]] = None) -> None:
         db.query_no_return(f"DELETE FROM {endpoint} WHERE scraped_at < '{str(stale_cutoff)}'")
         logging.info("Stale data has been removed")
 
-def unwrap_products(response_data: dict[str, dict[str, Any]], ts: datetime) -> list[list[Any]]:
+def unwrap_products(response_data: dict[str, dict[str, Any]], ts: datetime, id: int) -> list[list[Any]]:
     output = []
     for product_name, product_value in response_data.items():
         for batch_key, batch_values in product_value['products'].items():
-            output.append([ts, product_name, batch_key, batch_values['id'], datetime.fromisoformat(batch_values['sell_by'])])
+            output.append([id, ts, product_name, batch_key, batch_values['id'], datetime.fromisoformat(batch_values['sell_by'])])
 
     return output
 
 
-def unwrap_stocks(response_data: dict[str, dict[str, Any]], ts: datetime) -> list[list[Any]]:
+def unwrap_stocks(response_data: dict[str, dict[str, Any]], ts: datetime, id: int) -> list[list[Any]]:
     output = []
     for key, value in response_data.items():
         for batch_id, stock_amount in value.items():
-            output.append([ts, batch_id, stock_amount])
+            output.append([id, ts, batch_id, stock_amount])
 
     return output
 
 
-def unwrap_prices(response_data: dict[str, dict[str, dict[str, Any]]], ts: datetime) -> list[list[Any]]:
+def unwrap_prices(response_data: dict[str, dict[str, dict[str, Any]]], ts: datetime, id: int) -> list[list[Any]]:
     output = []
     for product, value in response_data.items():
         for batch_id, competitor_data in value.items():
             for competitor_id, price in competitor_data.items():
-                output.append([ts, product, batch_id, competitor_id, price])
+                output.append([id, ts, product, batch_id, competitor_id, price])
 
     return output
 
 
-def unwrap_leaderboards(response_data: dict[str, str], ts: datetime) -> list[list[Any]]:
+def unwrap_leaderboards(response_data: dict[str, str], ts: datetime, id: int) -> list[list[Any]]:
     
     output = []
     for team_name, score in response_data.items():
-        output.append([ts, team_name, score])
+        output.append([int, ts, team_name, score])
 
     return output
+
+
+def get_max_id(connection, table_name: str, where: str) -> int:
+    max_id = connection.read(f"SELECT MAX(id) from {table_name} {where}")[0][0]
+    if max_id is None:
+        max_id = 1
+    else:
+        max_id += 1
+    return max_id
 
 if __name__ == "__main__":
     scrape(['leaderboards'])
