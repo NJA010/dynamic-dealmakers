@@ -43,11 +43,12 @@ def get_prices():
     db = DatabaseClient(load_config())
     # READ STOCK DATA
     try:
-        params = db.read("SELECT * from simulation ORDER BY calc_at DESC LIMIT 10")
+        params = db.read("SELECT * from simulation where total_revenue = (select max(total_revenue) from simulation)")
         params_formatted = {row[2]: [float(p) for p in row[3]] for row in params}
         result = get_optimized_prices(products_data, stocks_data, params_formatted)
         location = "optimized_prices"
-    except Exception:
+    except Exception as e:
+        logging.error(e)
         result = get_simple_prices(products_data, low=1, high=7)
         location = "simple_prices"
 
