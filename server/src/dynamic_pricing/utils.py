@@ -26,7 +26,13 @@ products = [
     "beef",
     "avocado",
 ]
-team_names = ["DynamicDealmakers", "GenDP", "RedAlert", "random_competitor", "ThePRIceIsRight"]
+team_names = [
+    "DynamicDealmakers",
+    "GenDP",
+    "RedAlert",
+    "random_competitor",
+    "ThePRIceIsRight",
+]
 
 product_index = {
     "apples-red": 0,
@@ -41,7 +47,13 @@ product_index = {
     "avocado": 9,
 }
 index_product = {value: key for key, value in product_index.items()}
-team_index = {"DynamicDealmakers": 0, "GenDP": 1, "RedAlert": 2, "random_competitor": 3, "ThePRIceIsRight": 4}
+team_index = {
+    "DynamicDealmakers": 0,
+    "GenDP": 1,
+    "RedAlert": 2,
+    "random_competitor": 3,
+    "ThePRIceIsRight": 4,
+}
 index_team = {value: key for key, value in team_index.items()}
 
 
@@ -115,9 +127,57 @@ def get_hardcoded_sigmoid_params() -> dict[str, np.ndarray]:
 
 
 class SimulatorSettings(BaseSettings):
-    periods: int = Field(default=60)
+    periods: int = Field(default=600)
     quantity_min: int = Field(default=1)
     quantity_max: int = Field(default=5)
-    stock_start: int = Field(default=100)
+    quantity: dict = {
+        "apples-red": 78,
+        "apples-green": 42,
+        "bananas": 80,
+        "bananas-organic": 21,
+        "broccoli": 42,
+        "rice": 42,
+        "wine": 16,
+        "cheese": 11,
+        "beef": 22,
+        "avocado": 12,
+    }
+    stock_start: dict = {
+        "apples-red": 150,
+        "apples-green": 100,
+        "bananas": 200,
+        "bananas-organic": 50,
+        "broccoli": 100,
+        "rice": 50,
+        "wine": 20,
+        "cheese": 30,
+        "beef": 30,
+        "avocado": 20,
+    }
+    # restock time in minutes
+    restock_interval: dict = {
+        "apples-red": 11,
+        "apples-green": 11,
+        "bananas": 11,
+        "bananas-organic": 11,
+        "broccoli": 11,
+        "rice": 20,
+        "wine": 20,
+        "cheese": 11,
+        "beef": 11,
+        "avocado": 11,
+    }
+    expire_interval: dict = {
+        "apples-red": 60,
+        "apples-green": 60,
+        "bananas": 60,
+        "bananas-organic": 60,
+        "broccoli": 60,
+        "rice": 60*24,
+        "wine": 60*24,
+        "cheese": 60,
+        "beef": 60,
+        "avocado": 30,
+    }
     our_name: str
     num_teams: int

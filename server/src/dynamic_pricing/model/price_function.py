@@ -19,12 +19,14 @@ def get_optimized_prices(products: dict, stock: dict, params: dict):
     :param params: {product: [params]}
     :return:
     """
+    result = {}
     for product_name in products.keys():
-        for uuid in products[product_name]:
-            products[product_name][uuid] = float(price_function_sigmoid(
+        result[product_name] = {}
+        for uuid in products[product_name]['products']:
+            result[product_name][uuid] = float(price_function_sigmoid(
                 stock[product_name], *params[product_name]
             ))
-    return products
+    return result
 
 
 def price_function_sigmoid(
