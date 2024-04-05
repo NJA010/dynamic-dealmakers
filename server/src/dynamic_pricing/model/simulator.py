@@ -362,7 +362,7 @@ if __name__ == "__main__":
 
     # DATABASE
     db_client = DatabaseClient(load_config())
-    df_prices = get_prices(db_client, interval='1 hour')
+    df_prices = get_prices(db_client, interval='5 hour')
 
     # READ LOCAl JSON
     # df_prices = pd.read_json("./prices.json")
