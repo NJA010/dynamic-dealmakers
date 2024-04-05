@@ -6,7 +6,7 @@ steps:
       - -f
       - Dockerfile
       - -t
-      - europe-west1-docker.pkg.dev/$PROJECT_ID/dd-repo/dd_webshop_cicd:latest
+      - europe-west1-docker.pkg.dev/$PROJECT_ID/dd-evidence/evidence_server:latest
       - .
   - name: gcr.io/cloud-builders/docker
     args:
@@ -19,7 +19,7 @@ steps:
       - deploy
       - dd-service-cicd
       - --image
-      - europe-west1-docker.pkg.dev/$PROJECT_ID/dd-repo/dd_webshop_cicd:latest
+      - europe-west1-docker.pkg.dev/$PROJECT_ID/dd-evidence/evidence_server:latest
       - --region
       - europe-west1
       - --max-instances
@@ -36,4 +36,4 @@ steps:
       - --service-account
       - api-service-account@dynamicdealmakers-7012254.iam.gserviceaccount.com
 images:
-  - europe-west1-docker.pkg.dev/$PROJECT_ID/dd-repo/dd_webshop_cicd:latest
+  - europe-west1-docker.pkg.dev/$PROJECT_ID/dd-evidence/evidence_server:latest
