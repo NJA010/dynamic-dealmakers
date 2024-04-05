@@ -4,7 +4,6 @@ from datetime import datetime, timedelta
 import pytz
 from typing import Any, Optional
 import time
-import json
 import pytz
 import uuid
 
@@ -13,8 +12,9 @@ import requests
 import google.auth.transport.requests
 import google.oauth2.id_token
 
-from dynamic_pricing.database import DatabaseClient
+from dynamic_pricing.database import DatabaseClient, load_config
 from dynamic_pricing.env_setting import define_app_creds
+
 
 logging.basicConfig(level=logging.INFO)
 
@@ -26,7 +26,6 @@ audience = "https://api-4q7cwzagvq-ez.a.run.app"
 # Function to get the headers
 def get_requests_headers(api_key, audience):
     _ = define_app_creds()
-
     auth_req = google.auth.transport.requests.Request()
     id_token = google.oauth2.id_token.fetch_id_token(auth_req, audience)
 
@@ -43,7 +42,7 @@ def scrape(endpoints: Optional[list[str]] = None) -> None:
         endpoints = ENDPOINTS
 
     headers = get_requests_headers(api_key, audience)
-    
+
     # Loop over every endpoint
     for endpoint in endpoints:
         logging.info(f"\nScraping data from {endpoint}...")

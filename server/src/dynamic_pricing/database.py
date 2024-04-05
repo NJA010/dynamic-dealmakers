@@ -1,7 +1,6 @@
 from configparser import ConfigParser
 from typing import Any
-import json
-import os
+import os 
 
 import psycopg2
 from psycopg2 import sql
@@ -9,6 +8,7 @@ from psycopg2.extras import Json, execute_values
 import pytz
 from datetime import datetime
 from pathlib import Path
+
 
 from dynamic_pricing.env_setting import define_app_creds, get_secret
 
