@@ -88,7 +88,7 @@ def scrape(endpoints: Optional[list[str]] = None) -> None:
                             row.append(None)
                     db.insert_values(endpoint, output, ['scraped_at', 'batch_id', 'stock_amount', 'prev_stock_amount', 'sold_stock'])
                 case "leaderboards":
-                    output = unwrap_products(data.json(), ts)
+                    output = unwrap_leaderboards(data.json(), ts)
                     db.insert_values(endpoint, output, ['scraped_at', 'team_name', 'score'])
                 case _:
                     continue
