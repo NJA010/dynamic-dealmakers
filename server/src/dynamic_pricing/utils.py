@@ -127,7 +127,7 @@ def get_hardcoded_sigmoid_params() -> dict[str, np.ndarray]:
 
 
 class SimulatorSettings(BaseSettings):
-    periods: int = Field(default=60)
+    periods: int = Field(default=600)
     quantity_min: int = Field(default=1)
     quantity_max: int = Field(default=5)
     quantity: dict = {
@@ -143,7 +143,7 @@ class SimulatorSettings(BaseSettings):
         "avocado": (8, 9),
     }
     stock_start: dict = {
-        "apples-red": 100,
+        "apples-red": 150,
         "apples-green": 100,
         "bananas": 200,
         "bananas-organic": 50,
@@ -153,6 +153,31 @@ class SimulatorSettings(BaseSettings):
         "cheese": 30,
         "beef": 30,
         "avocado": 20,
+    }
+    # restock time in minutes
+    restock_interval: dict = {
+        "apples-red": 11,
+        "apples-green": 11,
+        "bananas": 11,
+        "bananas-organic": 11,
+        "broccoli": 11,
+        "rice": 20,
+        "wine": 20,
+        "cheese": 11,
+        "beef": 11,
+        "avocado": 11,
+    }
+    expire_interval: dict = {
+        "apples-red": 60,
+        "apples-green": 60,
+        "bananas": 60,
+        "bananas-organic": 60,
+        "broccoli": 60,
+        "rice": 60*24,
+        "wine": 60*24,
+        "cheese": 60,
+        "beef": 60,
+        "avocado": 30,
     }
     our_name: str
     num_teams: int
