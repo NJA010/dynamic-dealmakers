@@ -18,7 +18,8 @@ dependencies = [
     "scipy",
     "jax[cpu]",
     "requests",
-    "pytz"
+    "pytz",
+    "google-cloud-secret-manager==2.19.0"
 ]
 
 [project.optional-dependencies]
