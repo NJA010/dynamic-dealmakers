@@ -5,3 +5,5 @@ node_modules
 .DS_Store
 static/data
 *.options.yaml
+connection.yaml
+connection_private.yaml

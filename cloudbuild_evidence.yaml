@@ -1,25 +1,27 @@
 steps:
   - name: gcr.io/cloud-builders/docker
-    dir: server
+    dir: evidence
+    env:
+      - DOCKER_BUILDKIT=1
     args:
       - build
       - -f
       - Dockerfile
       - -t
-      - europe-west1-docker.pkg.dev/$PROJECT_ID/dd-evidence/evidence_server:latest
+      - europe-west1-docker.pkg.dev/$PROJECT_ID/dd-repo/evidence-server:latest
       - .
   - name: gcr.io/cloud-builders/docker
     args:
       - push
-      - europe-west1-docker.pkg.dev/$PROJECT_ID/evidence-repo/evidence-server:latest
+      - europe-west1-docker.pkg.dev/$PROJECT_ID/dd-repo/evidence-server:latest
   - name: eu.gcr.io/google.com/cloudsdktool/cloud-sdk
     entrypoint: gcloud
     args:
       - run
       - deploy
-      - dd-service-cicd
+      - evidence-server
       - --image
-      - europe-west1-docker.pkg.dev/$PROJECT_ID/dd-evidence/evidence_server:latest
+      - europe-west1-docker.pkg.dev/$PROJECT_ID/dd-repo/evidence-server:latest
       - --region
       - europe-west1
       - --max-instances
@@ -33,7 +35,10 @@ steps:
       - --allow-unauthenticated
       - --port
       - '80'
+      - --update-env-vars
+      - EVIDENCE_SOURCE__postgres__connectionString=${_EVIDENCE_CONNECTION_STRING},EVIDENCE_SOURCE__dd__connectionString=${_EVIDENCE_CONNECTION_STRING}
       - --service-account
       - api-service-account@dynamicdealmakers-7012254.iam.gserviceaccount.com
+      
 images:
-  - europe-west1-docker.pkg.dev/$PROJECT_ID/dd-evidence/evidence_server:latest
+  - europe-west1-docker.pkg.dev/$PROJECT_ID/dd-repo/evidence-server:latest
