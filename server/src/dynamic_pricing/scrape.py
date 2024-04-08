@@ -174,6 +174,7 @@ def get_max_id(connection, table_name: str, where: str) -> int:
 
 
 def clean_old_records(config: list[TableConfig]) -> None:
+    db = DatabaseClient(load_config())
     for conf in config:
         stale_cutoff = datetime.now(pytz.timezone('Europe/Amsterdam')) - timedelta(hours=conf.cutoff_interval_hours)
         db.query_no_return(f"DELETE FROM {conf.name} WHERE scraped_at < '{str(stale_cutoff)}'")
