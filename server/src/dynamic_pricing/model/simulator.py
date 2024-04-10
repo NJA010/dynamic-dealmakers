@@ -3,7 +3,7 @@ import json
 
 import numpy as np
 import jax.numpy as jnp
-from jax import jit, value_and_grad, random
+from jax import jit, value_and_grad, random, vmap
 from copy import deepcopy
 
 # from jax.scipy.optimize import minimize
@@ -52,8 +52,7 @@ def price_calc(x0: jnp.ndarray, data, **kwargs) -> float:
 
 
 def update_stock(
-    stock: dict[int, dict[int, Stock]],
-    current_time: int
+    stock: dict[int, dict[int, Stock]], current_time: int
 ) -> dict[int, dict[int, Stock]]:
     # update stock for all teams
     for team, product_stock in stock.items():
@@ -92,6 +91,80 @@ def get_current_stock(
     return data
 
 
+def distribute_units(prices, total_units):
+    # Convert prices to JAX array
+    prices = jnp.array(prices)
+
+    # Calculate weights based on exponential of negative prices
+    weights = prices ** (-2)
+
+    # Normalize weights to sum up to total_units
+    normalized_weights = (weights / jnp.sum(weights)) * total_units
+
+    return normalized_weights
+
+
+def approx_sold_stock(
+    product_type: int,
+    stock: dict[int, dict[int, Stock]],
+    valid_indices: jnp.ndarray,
+    valid_prices: jnp.ndarray,
+    valid_teams: jnp.ndarray,
+    quantity: int,
+    current_time: int,
+) -> (list[dict], float):
+    sold_quantity = distribute_units(valid_prices, quantity)
+    sold_stock = []
+    r = 0
+    for i in range(valid_indices.size):
+
+        # gather sale info
+        team_sell = int(valid_teams[i])
+        price_sell = float(valid_prices[i].primal)
+        # get approx sold stock
+        quantity_sell = float(sold_quantity[i].primal)
+        # check how much this team can sell and save
+        current_stock = stock[team_sell][product_type].get_stock()
+        sale = min(current_stock, quantity_sell)
+        sold_stock.append(
+            {
+                "team": team_sell,
+                "price": price_sell,
+                "quantity": sale,
+                "current_time": current_time,
+            }
+        )
+        # update stock
+        stock[team_sell][int(product_type)].update_sale(sale)
+        # store revenue if our team has best valid price
+        if team_sell == 0:
+            r = r + sale * price_sell
+        # in case 0<stock<quantity, sell remainder to next team
+        quantity -= sale
+    # if other teams can't sell, keep added selling until everything is sold
+    # redistribute quantity if there's
+    if quantity > 1 and any([stock[t][product_type].get_stock()>0 for t in stock.keys()]):
+        valid_indices = jnp.array(
+            [
+                idx
+                for idx in valid_indices
+                if stock[int(valid_teams[idx])][product_type].get_stock() > 0
+            ]
+        )
+        nested_sold_stock, nested_r = approx_sold_stock(
+            product_type=product_type,
+            stock=stock,
+            valid_prices=valid_prices[valid_indices],
+            valid_teams=valid_teams[valid_indices],
+            quantity=quantity,
+            valid_indices=valid_indices,
+            current_time=current_time,
+        )
+        sold_stock += nested_sold_stock
+        r += nested_r
+    return sold_stock, r
+
+
 def get_sold_stock(
     product_type: int,
     stock: dict[int, dict[int, Stock]],
@@ -108,16 +181,16 @@ def get_sold_stock(
     i = 0
     # store revenue
     r = 0
-    team_sell = int(valid_teams[sorted_indices[i]])
-    while quantity > 0 and i< sorted_indices.size:
+    # team_sell = int(valid_teams[sorted_indices[i]])
+    while quantity > 0 and i < sorted_indices.size:
         # obtain index/team corresponding to cheapest price
         idx = sorted_indices[i]
-        # only sell once per team
-        if (team_sell == int(valid_teams[idx])) and i>0:
-            i+=1
-            continue
-        else:
-            team_sell = int(valid_teams[idx])
+        # # only sell once per team
+        # if (team_sell == int(valid_teams[idx])) and i > 0:
+        #     i += 1
+        #     continue
+        # else:
+        team_sell = int(valid_teams[idx])
         price_sell = float(valid_prices[idx].primal)
         # check how much this team can sell and save
         current_stock = stock[team_sell][int(product_type)].get_stock()
@@ -175,7 +248,7 @@ def obtain_sale_data(
         )
 
         if len(valid_indices) > 0:
-            sold_stock[int(product_type)], r = get_sold_stock(
+            sold_stock[int(product_type)], r = approx_sold_stock(
                 product_type=int(product_type),
                 stock=stock,
                 valid_prices=sell_prices[valid_indices],
@@ -184,7 +257,7 @@ def obtain_sale_data(
                 valid_indices=valid_indices,
                 current_time=current_time,
             )
-            total_revenue+=r
+            total_revenue += r
         else:
             logging.debug(f"Time: {current_time}, No valid indices all out of stock")
     return sold_stock, total_revenue
@@ -200,10 +273,12 @@ def simulate_trades(
 ) -> float:
 
     stock = deepcopy(original_stock)
+    total_q_sold = {}
     # init stock
     for team in stock.keys():
         for product in stock[team].keys():
             stock[team][product].initialize()
+            total_q_sold[product] = 0
     pred_revenue = 0.0
     # x0 = jnp.concatenate([jnp.zeros((1,)) + 50, x0])
     for current_time, (d_us_t, d_comp_t) in enumerate(zip(data_us, data_competitor)):
@@ -221,11 +296,14 @@ def simulate_trades(
         stock = update_stock(stock, current_time=current_time)
         for pr, sales_info in sale_data.items():
             for single_sale in sales_info:
+                if single_sale['team'] == 0:
+                    total_q_sold[pr] += single_sale['quantity']
                 logging.debug(
                     f"at time: {current_time}, {single_sale['quantity']} {index_product[pr]} sold to "
-                    f"{index_team[single_sale['team']]} at {single_sale['price']}"
+                    f"{index_team[single_sale['team']]} at {single_sale['price']} "
                     f"revenue: {pred_revenue}"
                 )
+    logging.info(f"{index_product[pr]}: Total revenue = {pred_revenue} total sold = {total_q_sold[pr]}")
     return -pred_revenue
 
 
@@ -274,7 +352,7 @@ def run_simulation(df_price, stock, settings: SimulatorSettings):
     }
     # initialize parameters
     params = {
-        "a": jnp.zeros((10, 1)) + 50,
+        "a": jnp.zeros((10, 1)) + 1000,
         "b": jnp.zeros((10, 1)) + 10,
         "c": jnp.zeros((10, 1)) - 20,  # High for low stock
     }
@@ -282,11 +360,13 @@ def run_simulation(df_price, stock, settings: SimulatorSettings):
     total_revenue = 0
     # do simulation per product
     for prod, i in product_index.items():
-        logging.info(f"Running optimization for: {prod} with time length: {len(df_t_us)}")
+        logging.info(
+            f"Running optimization for: {prod} with time length: {len(df_t_us)}"
+        )
         x0 = jnp.concatenate([params["a"][i], params["b"][i], params["c"][i]])
 
         # a, b >0
-        bounds = ((1, 200), (1, 50), (-50, 50))
+        bounds = ((1, 2000), (1, 50), (-50, 50))
         # r = simulate_trades(
         #     x0,
         #     [d[d[:, 1] == i] for d in df_t_us],
@@ -363,10 +443,18 @@ if __name__ == "__main__":
 
     # DATABASE
     db_client = DatabaseClient(load_config())
-    df_prices = get_prices(db_client, interval='5 hour')
+    df_prices = get_prices(db_client, interval="5 hour")
+
 
     # READ LOCAl JSON
     # df_prices = pd.read_json("./prices.json")
+
+    # agg prices per batch for simplicity
+    df_prices = (
+        df_prices.groupby(["competitor_name", "scraped_at", "product_name"])
+        .competitor_price.mean()
+        .reset_index()
+    )
     # create stock objects
     stock = {
         c: {
@@ -378,7 +466,7 @@ if __name__ == "__main__":
             )
             for p in product_index.keys()
         }
-        for c in team_names
+        for c in df_prices.competitor_name.unique()
     }
     simulation_data = run_simulation(df_prices, stock, settings)
     save_params(simulation_data)
@@ -401,5 +489,9 @@ if __name__ == "__main__":
     for obj in simulation_data:
         output.append([max_id, ts, obj, simulation_data[obj], total_revenue])
 
-    db_client.insert_values("simulation", output, ["id", "simulated_at", "product_name", "params", "total_revenue"])
+    db_client.insert_values(
+        "simulation",
+        output,
+        ["id", "simulated_at", "product_name", "params", "total_revenue"],
+    )
     logging.info("Sucessfully added parameters to the params table")
