@@ -22,7 +22,7 @@ steps:
     args:
       - run
       - deploy
-      - evidence-server
+      - dd-evidence-server
       - --image
       - europe-west1-docker.pkg.dev/$PROJECT_ID/dd-repo/evidence-server:latest
       - --region
