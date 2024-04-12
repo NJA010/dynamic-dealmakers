@@ -3,6 +3,8 @@ steps:
     dir: evidence
     env:
       - DOCKER_BUILDKIT=1
+      - EVIDENCE_SOURCE__postgres__connectionString=${_EVIDENCE_CONNECTION_STRING}
+      - EVIDENCE_SOURCE__dd__connectionString=${_EVIDENCE_CONNECTION_STRING}
     args:
       - build
       - -f

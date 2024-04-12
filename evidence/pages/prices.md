@@ -11,7 +11,7 @@ select
     , median(competitor_price) as competitor_price
 from memory."dynamic-dealmakers".prices
 where
-    (product_name in (${inputs.Products}) or '' = (${inputs.Products}))
+    (product_name in (${inputs.Products}) or '' in (${inputs.Products}))
     and competitor_name like '${inputs.Competitor}'
 group by product_name, scraped_at
 order by scraped_at, competitor_name
