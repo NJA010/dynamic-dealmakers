@@ -1,0 +1,14 @@
+version: '3'
+
+tasks:
+  run-evidence: 
+    cmds: 
+      - npm run sources
+      - npm run build
+
+  build-docker:
+    cmds:
+      - docker build --no-cache -t dd-evidence-dashboard:latest --build-arg EVIDENCE_SOURCE__dynamic_dealmakers__connectionString=${_EVIDENCE_CONNECTION_STRING} .
+      - docker run -p 8989:80 --name dd-evidence-dashboard dd-evidence-dashboard:latest
+    dotenv:
+      - .env

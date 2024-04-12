@@ -1,5 +1,6 @@
 from configparser import ConfigParser
 from typing import Any
+import os 
 
 import psycopg2
 from psycopg2 import sql
@@ -9,7 +10,23 @@ from datetime import datetime
 from pathlib import Path
 
 
+from dynamic_pricing.env_setting import define_app_creds, get_secret
+
+DEBUG = os.getenv('DEBUG', True) in ['true', 'True', True]
+PROJECT_ID = os.getenv('PROJECT_ID')
+SECRET_ID = os.getenv('SECRET_ID')
+VERSION_ID = os.getenv('VERSION_ID')
+
 def load_config(filename='database.ini', section='postgresql') -> dict[str, str]:
+    _ = define_app_creds()
+    if not DEBUG:
+        # run in cloud
+        return get_secret(
+            project_id=PROJECT_ID,
+            secret_id=SECRET_ID,
+            version_id=VERSION_ID,
+            )        
+
     parser = ConfigParser()
     parser.read(filename)
 

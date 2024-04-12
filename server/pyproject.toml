@@ -19,6 +19,7 @@ dependencies = [
     "jax[cpu]",
     "requests",
     "pytz",
+    "google-cloud-secret-manager==2.19.0",
     "matplotlib",
     "Flask"
 ]

@@ -86,7 +86,6 @@ def get_params(client: DatabaseClient) -> dict[str, np.ndarray]:
 
     return data
 
-
 def get_prices(client: DatabaseClient, interval: str = "1 hour"):
     query = f"""
     select 

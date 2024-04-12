@@ -1,0 +1,12 @@
+version: '3.9'
+services:
+  server:
+    container_name: server
+    build: .
+    ports:
+      - 8080:8080
+    env_file: .env
+    environment: 
+      - DEBUG=false
+    volumes:
+      - ${PWD}/config.json:/app/config.json

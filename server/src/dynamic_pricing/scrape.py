@@ -12,20 +12,21 @@ import requests
 import google.auth.transport.requests
 import google.oauth2.id_token
 
-from dynamic_pricing.database import load_config, DatabaseClient
+from dynamic_pricing.database import DatabaseClient, load_config
+from dynamic_pricing.env_setting import define_app_creds
+
 
 logging.basicConfig(level=logging.INFO)
 
 api_key = os.environ.get("TF_VAR_api_key")
 audience = "https://api-4q7cwzagvq-ez.a.run.app"
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'pricing-prd-11719402-69eaf79e6222.json'
-db = DatabaseClient(load_config())
 
 @dataclass
 class TableConfig:
     name: str
     cutoff_interval_hours: int
     time_column: str
+
 
 ENDPOINTS = ["prices", "products", "leaderboards", "stocks"]
 TABLE_CONFIGS = [
@@ -36,9 +37,12 @@ TABLE_CONFIGS = [
     TableConfig('prices_log', 24, 'scraped_at'),
 ]
 
+api_key = os.environ.get("TF_VAR_api_key")
+audience = "https://api-4q7cwzagvq-ez.a.run.app"
 
 # Function to get the headers
 def get_requests_headers(api_key, audience):
+    _ = define_app_creds()
     auth_req = google.auth.transport.requests.Request()
     id_token = google.oauth2.id_token.fetch_id_token(auth_req, audience)
 
@@ -50,6 +54,7 @@ def get_requests_headers(api_key, audience):
 
 # Function to scrape the data
 def scrape(endpoints: Optional[list[str]] = None) -> None:
+    db = DatabaseClient(load_config())
     if endpoints is None:
         endpoints = ENDPOINTS
 

@@ -63,3 +63,16 @@ tasks:
     dir: server
     cmds:
       - 'curl --header "Authorization: Bearer $(gcloud auth print-identity-token)" {{.SERVICE_URL}}/prices'
+
+  deploy-evidence:
+    cmds:
+      - gcloud builds submit --config cloudbuild_evidence.yaml --substitutions _EVIDENCE_CONNECTION_STRING=${EVIDENCE_CONNECTION_STRING}
+    dotenv: 
+      - evidence/.env
+    
+  deploy-cloudrun:
+    cmds:
+      - gcloud builds submit --config cloudbuild_server.yaml --substitutions _API_KEY=${API_KEY},_SECRET_NAME={$SECRET_NAME},_SECRET_NAME_SA=${SECRET_NAME_SA}
+    dotenv: 
+      - server/.env
+    

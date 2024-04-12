@@ -61,7 +61,10 @@ def price_function_sigmoid(
 
 if __name__ == "__main__":
     from dynamic_pricing.scrape import get_requests_headers, api_key, audience
+    from dynamic_pricing.env_setting import define_app_creds
     import requests
+
+    _ = define_app_creds()
 
     headers = get_requests_headers(api_key, audience)
     product_data = requests.get(f"{audience}/products", headers=headers).json()
