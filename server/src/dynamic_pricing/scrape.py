@@ -31,7 +31,7 @@ ENDPOINTS = ["prices", "products", "leaderboards", "stocks"]
 TABLE_CONFIGS = [
     TableConfig('prices', 24, 'scraped_at'),
     TableConfig('products', 24, 'scraped_at'),
-    TableConfig('leaderboards', 24, 'scraped_at'),
+    TableConfig('leaderboards', 24*7, 'scraped_at'),
     TableConfig('stocks', 24, 'scraped_at'),
     TableConfig('prices_log', 24, 'scraped_at'),
 ]
