@@ -13,13 +13,13 @@ with distinct_products as (
 		batch_id::integer as batch_id
 		, product_name
 	
-	from memory."dynamic-dealmakers".products p
+	from memory."dynamic_dealmakers".products p
 )
 select
 	s.scraped_at 
 	, p.product_name 
 	, sum(s.stock_amount) as stock_amount
-from memory."dynamic-dealmakers".stocks s
+from memory."dynamic_dealmakers".stocks s
 left join distinct_products p using(batch_id)
 where
     (p.product_name in (${inputs.Products}) or '' in (${inputs.Products}))
@@ -31,7 +31,7 @@ group by s.scraped_at, p.product_name
 ```sql products
 select distinct
     product_name
-from memory."dynamic-dealmakers".products
+from memory."dynamic_dealmakers".products
 order by product_name
 ```
 
