@@ -9,6 +9,8 @@ RUN npm ci
 COPY . .
 RUN sed -i  's/localhost/host.docker.internal/' sources/dd/connection.yaml
 
+ARG EVIDENCE_SOURCE__dynamic_dealmakers__connectionString=${EVIDENCE_SOURCE__dynamic_dealmakers__connectionString}
+ENV EVIDENCE_SOURCE__dynamic_dealmakers__connectionString=${EVIDENCE_SOURCE__dynamic_dealmakers__connectionString}
 RUN npm run sources && npm run build
 
 FROM nginx:1.25.3-bookworm

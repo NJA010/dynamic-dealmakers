@@ -9,7 +9,7 @@ select
     , scraped_at
     , max(competitor_name) as competitor_name
     , median(competitor_price) as competitor_price
-from memory."dynamic-dealmakers".prices
+from  memory."dynamic_dealmakers".prices
 where
     (product_name in (${inputs.Products}) or '' in (${inputs.Products}))
     and competitor_name like '${inputs.Competitor}'
@@ -22,14 +22,14 @@ order by scraped_at, competitor_name
 ```sql products
 select distinct
     product_name
-from memory."dynamic-dealmakers".prices
+from  memory."dynamic_dealmakers".prices
 order by product_name
 ```
 
 ```sql competitors
 select distinct
     competitor_name
-from memory."dynamic-dealmakers".prices
+from  memory."dynamic_dealmakers".prices
 order by competitor_name
 ```
 

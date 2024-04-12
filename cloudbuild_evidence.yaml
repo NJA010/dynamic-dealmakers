@@ -3,10 +3,11 @@ steps:
     dir: evidence
     env:
       - DOCKER_BUILDKIT=1
-      - EVIDENCE_SOURCE__postgres__connectionString=${_EVIDENCE_CONNECTION_STRING}
-      - EVIDENCE_SOURCE__dd__connectionString=${_EVIDENCE_CONNECTION_STRING}
+      - EVIDENCE_SOURCE__dynamic_dealmakers__connectionString=${_EVIDENCE_CONNECTION_STRING}
     args:
-      - build
+      - build 
+      - --build-arg
+      - EVIDENCE_SOURCE__dynamic_dealmakers__connectionString=${_EVIDENCE_CONNECTION_STRING}
       - -f
       - Dockerfile
       - -t
@@ -38,7 +39,7 @@ steps:
       - --port
       - '80'
       - --update-env-vars
-      - EVIDENCE_SOURCE__postgres__connectionString=${_EVIDENCE_CONNECTION_STRING},EVIDENCE_SOURCE__dd__connectionString=${_EVIDENCE_CONNECTION_STRING}
+      - EVIDENCE_SOURCE__dynamic_dealmakers__connectionString=${_EVIDENCE_CONNECTION_STRING}
       - --service-account
       - api-service-account@dynamicdealmakers-7012254.iam.gserviceaccount.com
       
