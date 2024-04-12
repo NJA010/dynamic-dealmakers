@@ -34,7 +34,7 @@ steps:
       - --port
       - '8080'
       - --update-env-vars
-      - TF_VAR_api_key=${_API_KEY},PROJECT_ID=${PROJECT_ID},SECRET_ID=${_SECRET_NAME},SECRET_ID_SA=${_SECRET_NAME_SA},VERSION_ID=latest,DEBUG=false
+      - TF_VAR_api_key=${_API_KEY},PROJECT_ID=${_PROJECT_ID},SECRET_ID=${_SECRET_NAME},SECRET_ID_SA=${_SECRET_NAME_SA},VERSION_ID=latest,DEBUG=false
       - --service-account
       - api-service-account@dynamicdealmakers-7012254.iam.gserviceaccount.com
 images:

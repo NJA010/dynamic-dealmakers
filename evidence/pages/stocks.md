@@ -7,18 +7,6 @@ title: Stocks Development
 
 <!-- aggregated -->
 
-```sql products
-select
-	s.scraped_at 
-	, p.product_name 
-	, sum(s.stock_amount) as stock_amount
-from memory."dynamic-dealmakers".stocks s
-left join memory."dynamic-dealmakers".products p
-    on s.batch_id::text = p.batch_id ::text
-group by s.scraped_at, p.product_name 
-```
-
-
 ```sql stocks
 with distinct_products as (
 	select distinct on (batch_id)
