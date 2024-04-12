@@ -56,7 +56,7 @@ def price_function_sigmoid(
     """
     # data matrix is mixed so ensure stock is float here
     # stock = stock.astype(float)
-    return b / (1 + jnp.exp(-jnp.divide(stock - a, c)))
+    return b / (1 + jnp.exp(-jnp.divide(stock - a, c))) + 1
 
 
 if __name__ == "__main__":

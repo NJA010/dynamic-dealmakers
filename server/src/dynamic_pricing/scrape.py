@@ -3,10 +3,9 @@ import logging
 from datetime import datetime, timedelta
 import pytz
 from typing import Any, Optional
-import time
 import pytz
-import uuid
 from dataclasses import dataclass
+import json
 
 import requests
 
@@ -77,12 +76,26 @@ def scrape(endpoints: Optional[list[str]] = None) -> None:
             continue
 
         logging.info(f"\tStatus code: {data.status_code}")
-        
-        # Write the data to the database
-        logging.info(f"Writing data from {endpoint} to the database...")
+
+        last_response = db.read(f"SELECT response FROM last_endpoint_responses WHERE endpoint = '{endpoint}'")[0][0]
+
+        if last_response == data.json():
+            logging.info(f"Response for endpoint '{endpoint}' same as last run, skipping databse insert.")
+            continue
 
         amsterdam_tz = pytz.timezone('Europe/Amsterdam')
         ts = datetime.now(amsterdam_tz)
+
+        db.query_no_return(f"""
+            update last_endpoint_responses
+            set
+                scraped_at = '{ts}',
+                response = '{json.dumps(data.json())}'
+            where endpoint = '{endpoint}'
+        """)
+        
+        # Write the data to the database
+        logging.info(f"Writing data from {endpoint} to the database...")
 
         try:
             match endpoint:
@@ -103,6 +116,12 @@ def scrape(endpoints: Optional[list[str]] = None) -> None:
                                     'FROM stocks '
                                     f'WHERE batch_id={row[2]} '
                                     'ORDER BY id DESC LIMIT 1')[0][0]
+
+                            current_and_last_is_positive = int(row[3]) > 0 and int(row[4]) > 0
+
+                            if not current_and_last_is_positive:
+                                continue
+
                             row.append(last)
                             row.append(int(row[4]) - int(row[3]))
                         except IndexError:
@@ -138,7 +157,7 @@ def unwrap_products(response_data: dict[str, dict[str, Any]], ts: datetime, id: 
 
 def unwrap_stocks(response_data: dict[str, dict[str, Any]], ts: datetime, id: int) -> list[list[Any]]:
     output = []
-    for key, value in response_data.items():
+    for value in response_data.values():
         for batch_id, stock_amount in value.items():
             output.append([id, ts, batch_id, stock_amount])
 
@@ -181,5 +200,5 @@ def clean_old_records(config: list[TableConfig]) -> None:
 
 
 if __name__ == "__main__":
-    clean_old_records(TABLE_CONFIGS)
+    scrape()
 
