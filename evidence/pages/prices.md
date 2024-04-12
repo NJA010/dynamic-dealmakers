@@ -14,7 +14,7 @@ where
     (product_name in (${inputs.Products}) or '' in (${inputs.Products}))
     and competitor_name like '${inputs.Competitor}'
 group by product_name, scraped_at
-order by scraped_at, competitor_name
+order by scraped_at desc, competitor_name
 ```
 
 
@@ -64,10 +64,10 @@ order by competitor_name
     type=grouped
 />
 
-<DataTable data={prices} search=true>
+<DataTable data={prices} search=true sort=false>
     <Column id="product_name" title="product_name" />
     <Column id="competitor_price" title="competitor_price" />
     <Column id="competitor_name" title="competitor_name" />
-    <Column id="scraped_at" title="scraped_at" />
+    <Column id="scraped_at" title="scraped_at" fmt="mmmm d, yyyy H:MM:SS AM/PM" />
 </DataTable>
 
