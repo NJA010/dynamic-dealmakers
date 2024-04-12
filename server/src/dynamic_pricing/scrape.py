@@ -32,7 +32,7 @@ ENDPOINTS = ["prices", "products", "leaderboards", "stocks"]
 TABLE_CONFIGS = [
     TableConfig('prices', 24, 'scraped_at'),
     TableConfig('products', 24, 'scraped_at'),
-    TableConfig('leaderboards', 24, 'scraped_at'),
+    TableConfig('leaderboards', 24*8, 'scraped_at'),
     TableConfig('stocks', 24, 'scraped_at'),
     TableConfig('prices_log', 24, 'scraped_at'),
 ]
@@ -109,8 +109,9 @@ def scrape(endpoints: Optional[list[str]] = None) -> None:
                     db.insert_values(endpoint, output, ['id', 'scraped_at', 'product_name', 'batch_key', 'batch_id', 'batch_expiry'])
                 case "stocks":
                     max_id = get_max_id(db, 'stocks', 'WHERE id < 1000000000')
-                    output = unwrap_stocks(data.json(), ts, max_id)
-                    for row in output:
+                    unwrapped = unwrap_stocks(data.json(), ts, max_id)
+                    output = []
+                    for row in unwrapped:
                         try:
                             last = db.read('SELECT stock_amount '
                                     'FROM stocks '
@@ -127,6 +128,7 @@ def scrape(endpoints: Optional[list[str]] = None) -> None:
                         except IndexError:
                             row.append(None)
                             row.append(None)
+                        output.append(row)
                     db.insert_values(endpoint, output, ['id', 'scraped_at', 'batch_id', 'stock_amount', 'prev_stock_amount', 'sold_stock'])
                 case "leaderboards":
                     max_id = get_max_id(db, 'leaderboards', 'WHERE id < 1000000000')
