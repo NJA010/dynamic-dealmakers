@@ -161,10 +161,10 @@ class SimulatorSettings(BaseSettings):
         "bananas-organic": 11,
         "broccoli": 11,
         "rice": 20,
-        "wine": 20,
+        "wine": 30,
         "cheese": 11,
-        "beef": 11,
-        "avocado": 11,
+        "beef": 3,
+        "avocado": 20,
     }
     expire_interval: dict = {
         "apples-red": 60,

@@ -1,6 +1,24 @@
 from jax import jit, tree_util
 
 
+class SimConstant:
+    def __init__(self, product, quantity):
+        self.product = product
+        self.quantity = quantity
+
+    def _tree_flatten(self):
+        children = (0,)
+        aux_data = {
+            "product": self.product,
+            "quantity": self.quantity
+        }
+        return children, aux_data
+
+    @classmethod
+    def _tree_unflatten(cls, aux_data, children):
+        return cls(**aux_data)
+
+
 class Stock:
 
     def __init__(
@@ -22,7 +40,7 @@ class Stock:
         # quantity sold
         self.stock -= quantity_sold
 
-    @jit
+    # @jit
     def update(self, time: int):
         # expire products
         if ((time % self.expire_interval) == 0) and (time > 0):
@@ -49,7 +67,7 @@ class Stock:
         """
         self.stock += self.restock_amount
 
-    @jit
+    # @jit
     def expire(self):
         """
         inventory will expire with the same amount everytime
@@ -86,3 +104,4 @@ class Stock:
 
 
 tree_util.register_pytree_node(Stock, Stock._tree_flatten, Stock._tree_unflatten)
+tree_util.register_pytree_node(SimConstant, SimConstant._tree_flatten, SimConstant._tree_unflatten)
