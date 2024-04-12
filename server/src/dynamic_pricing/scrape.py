@@ -5,6 +5,7 @@ import pytz
 from typing import Any, Optional
 import pytz
 from dataclasses import dataclass
+import json
 
 import requests
 
@@ -71,7 +72,7 @@ def scrape(endpoints: Optional[list[str]] = None) -> None:
 
         logging.info(f"\tStatus code: {data.status_code}")
 
-        last_response = db.read(f"SELECT response FROM last_endpoint_responses WHERE endpoint = '{endpoint}'")
+        last_response = db.read(f"SELECT response FROM last_endpoint_responses WHERE endpoint = '{endpoint}'")[0][0]
 
         if last_response == data.json():
             logging.info(f"Response for endpoint '{endpoint}' same as last run, skipping databse insert.")
@@ -79,12 +80,12 @@ def scrape(endpoints: Optional[list[str]] = None) -> None:
 
         amsterdam_tz = pytz.timezone('Europe/Amsterdam')
         ts = datetime.now(amsterdam_tz)
-        
+
         db.query_no_return(f"""
             update last_endpoint_responses
             set
                 scraped_at = '{ts}',
-                response = '{data.json()}'::jsonb
+                response = '{json.dumps(data.json())}'
             where endpoint = '{endpoint}'
         """)
         
@@ -192,5 +193,5 @@ def clean_old_records(config: list[TableConfig]) -> None:
 
 
 if __name__ == "__main__":
-    clean_old_records(TABLE_CONFIGS)
+    scrape()
 
