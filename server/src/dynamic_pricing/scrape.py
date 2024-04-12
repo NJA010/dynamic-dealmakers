@@ -118,9 +118,9 @@ def scrape(endpoints: Optional[list[str]] = None) -> None:
                                     f'WHERE batch_id={row[2]} '
                                     'ORDER BY id DESC LIMIT 1')[0][0]
 
-                            current_and_last_is_positive = int(row[3]) > 0 and int(row[4]) > 0
+                            current_or_last_is_positive = int(row[3]) > 0 or int(row[4]) > 0
 
-                            if not current_and_last_is_positive:
+                            if not current_or_last_is_positive:
                                 continue
 
                             row.append(last)
