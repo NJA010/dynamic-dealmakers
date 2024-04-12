@@ -35,6 +35,7 @@ logging.basicConfig(level=logging.DEBUG)
 logging.getLogger("jax").setLevel(logging.INFO)
 
 
+@jit
 def price_calc(x0: jnp.ndarray, data, **kwargs) -> float:
     """
     Given a price function, calculate what the revenue would have been for price data
@@ -71,7 +72,7 @@ def random_randint(
 
 
 def get_current_stock(
-    data: jnp.ndarray, stock: dict[int, dict[int, Stock]]
+    data: jnp.ndarray, stock: dict[int, dict[int, Stock]], size: int
 ) -> jnp.ndarray:
     """
     at a given T = t, add the current stock to the data
@@ -79,7 +80,7 @@ def get_current_stock(
     :param stock: stock dictionary team->product->stock
     :return: data matrix with stock column at the end
     """
-    stock_update = jnp.zeros(data.shape[0])
+    stock_update = jnp.zeros(size)
     for team in stock.keys():
         for product in stock[team].keys():
             idx = jnp.where((data[:, 0] == team) & (data[:, 1] == product))[0]
@@ -91,12 +92,13 @@ def get_current_stock(
     return data
 
 
+@jit
 def distribute_units(prices, total_units):
     # Convert prices to JAX array
     prices = jnp.array(prices)
 
     # Calculate weights based on exponential of negative prices
-    weights = prices ** (-2)
+    weights = prices ** (-3)
 
     # Normalize weights to sum up to total_units
     normalized_weights = (weights / jnp.sum(weights)) * total_units
@@ -120,9 +122,9 @@ def approx_sold_stock(
 
         # gather sale info
         team_sell = int(valid_teams[i])
-        price_sell = float(valid_prices[i].primal)
+        price_sell = float(valid_prices[i])
         # get approx sold stock
-        quantity_sell = float(sold_quantity[i].primal)
+        quantity_sell = float(sold_quantity[i])
         # check how much this team can sell and save
         current_stock = stock[team_sell][product_type].get_stock()
         sale = min(current_stock, quantity_sell)
@@ -151,17 +153,18 @@ def approx_sold_stock(
                 if stock[int(valid_teams[idx])][product_type].get_stock() > 0
             ]
         )
-        nested_sold_stock, nested_r = approx_sold_stock(
-            product_type=product_type,
-            stock=stock,
-            valid_prices=valid_prices[valid_indices],
-            valid_teams=valid_teams[valid_indices],
-            quantity=quantity,
-            valid_indices=valid_indices,
-            current_time=current_time,
-        )
-        sold_stock += nested_sold_stock
-        r += nested_r
+        if len(valid_indices) > 0:
+            nested_sold_stock, nested_r = approx_sold_stock(
+                product_type=product_type,
+                stock=stock,
+                valid_prices=valid_prices[valid_indices],
+                valid_teams=valid_teams[valid_indices],
+                quantity=quantity,
+                valid_indices=valid_indices,
+                current_time=current_time,
+            )
+            sold_stock += nested_sold_stock
+            r += nested_r
     return sold_stock, r
 
 
@@ -191,7 +194,7 @@ def get_sold_stock(
         #     continue
         # else:
         team_sell = int(valid_teams[idx])
-        price_sell = float(valid_prices[idx].primal)
+        price_sell = float(valid_prices[idx])
         # check how much this team can sell and save
         current_stock = stock[team_sell][int(product_type)].get_stock()
         sale = min(current_stock, quantity)
@@ -217,7 +220,7 @@ def get_sold_stock(
 def obtain_sale_data(
     data: jnp.ndarray,
     stock: dict[int, dict[int, Stock]],
-    settings: SimulatorSettings,
+    quantity_dict: dict[str, int],
     current_time: int,
 ) -> (list[dict], float):
     # Extract relevant columns from the array
@@ -236,7 +239,7 @@ def obtain_sale_data(
         # Find indices where the product type matches
         indices = jnp.where(product_types == product_type)[0]
         # sale quantity
-        quantity = settings.quantity[index_product[int(product_type)]]
+        quantity = quantity_dict[index_product[int(product_type)]]
         # Filter out prices corresponding to teams with empty stock
         # Make sure its a JAX array for slicing
         valid_indices = jnp.array(
@@ -263,12 +266,13 @@ def obtain_sale_data(
     return sold_stock, total_revenue
 
 
+# @jit
 def simulate_trades(
     x0: jnp.ndarray,
     data_us: list,
     data_competitor: list,
     original_stock: dict[int, dict[int, Stock]],
-    settings: SimulatorSettings,
+    quantity_dict: dict[str, int],
     **kwargs,
 ) -> float:
 
@@ -282,13 +286,13 @@ def simulate_trades(
     pred_revenue = 0.0
     # x0 = jnp.concatenate([jnp.zeros((1,)) + 50, x0])
     for current_time, (d_us_t, d_comp_t) in enumerate(zip(data_us, data_competitor)):
-        d_us_t = get_current_stock(d_us_t, stock)
-        d_comp_t = get_current_stock(d_comp_t, stock)
+        d_us_t = get_current_stock(d_us_t, {t: stock[t] for t in stock.keys() if t == 0}, size=1)
+        d_comp_t = get_current_stock(d_comp_t, stock, size=len(stock.keys())-1)
         # calculate price for our team, price is at idx 2
         d_us_t = d_us_t.at[:, 2].set(price_calc(x0, d_us_t, **kwargs))
         # for all teams determine who made the sale
         sale_data, r = obtain_sale_data(
-            jnp.concatenate((d_us_t, d_comp_t)), stock, settings, current_time
+            jnp.concatenate((d_us_t, d_comp_t)), stock, quantity_dict, current_time
         )
         # update revenue
         pred_revenue += r
@@ -352,7 +356,7 @@ def run_simulation(df_price, stock, settings: SimulatorSettings):
     }
     # initialize parameters
     params = {
-        "a": jnp.zeros((10, 1)) + 1000,
+        "a": jnp.zeros((10, 1)) + 100,
         "b": jnp.zeros((10, 1)) + 10,
         "c": jnp.zeros((10, 1)) - 20,  # High for low stock
     }
@@ -366,7 +370,7 @@ def run_simulation(df_price, stock, settings: SimulatorSettings):
         x0 = jnp.concatenate([params["a"][i], params["b"][i], params["c"][i]])
 
         # a, b >0
-        bounds = ((1, 2000), (1, 50), (-50, 50))
+        bounds = ((1, 200), (1, 50), (-50, 50))
         # r = simulate_trades(
         #     x0,
         #     [d[d[:, 1] == i] for d in df_t_us],
@@ -376,22 +380,22 @@ def run_simulation(df_price, stock, settings: SimulatorSettings):
         # )
 
         # logging.info(r)
-        obj_and_grad = value_and_grad(simulate_trades)
+        # obj_and_grad = value_and_grad(simulate_trades)
         res = minimize(
-            obj_and_grad,
+            simulate_trades,
             x0,
             args=(
                 [d[d[:, 1] == i] for d in df_t_us],
                 [d[d[:, 1] == i] for d in df_t_comp],
                 stock_mapped,
-                settings,
+                settings.quantity,
             ),
-            method="L-BFGS-B",
+            method="nelder-mead",
             bounds=bounds,
             # seed=42,
             # disp=True
-            options={"disp": True, "gtol": 1e-12},
-            jac=True,
+            # options={"disp": True, "gtol": 1e-12},
+            # jac=True,
         )
         total_revenue += -float(res.fun)
         logging.info(
@@ -460,6 +464,7 @@ if __name__ == "__main__":
         c: {
             p: Stock(
                 name=p,
+                stock=settings.stock_start[p],
                 restock_amount=settings.stock_start[p],
                 restock_interval=settings.restock_interval[p],
                 expire_interval=settings.expire_interval[p],

@@ -131,7 +131,7 @@ class SimulatorSettings(BaseSettings):
     quantity_min: int = Field(default=1)
     quantity_max: int = Field(default=5)
     quantity: dict = {
-        "apples-red": 78,
+        "apples-red": 55,
         "apples-green": 42,
         "bananas": 80,
         "bananas-organic": 21,

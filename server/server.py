@@ -43,9 +43,11 @@ def get_prices():
     db = DatabaseClient(load_config())
     # READ STOCK DATA
     try:
-        params = db.read("SELECT * from simulation where total_revenue = (select max(total_revenue) from simulation)")
+        params = db.read("SELECT * from simulation where simulated_at = (select max(simulated_at) from simulation)")
         params_formatted = {row[2]: [float(p) for p in row[3]] for row in params}
-        result = get_optimized_prices(products_data, stocks_data, params_formatted)
+        # skip first level of json response, always some int (lucky 13)
+        for actual_stock_data in stocks_data.values():
+            result = get_optimized_prices(products_data, actual_stock_data, params_formatted)
         location = "optimized_prices"
     except Exception as e:
         logging.error(e)
