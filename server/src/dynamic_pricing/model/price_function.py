@@ -1,4 +1,6 @@
 import numpy as np
+import pytz
+from datetime import datetime
 import jax.numpy as jnp
 
 
@@ -22,11 +24,17 @@ def get_optimized_prices(products: dict, stock: dict, params: dict):
     result = {}
     product_stock = {}
     product_batch = {}
+    sell_dates = {}
     # obtain batch_id -> product_name map
     for product_name in products.keys():
         result[product_name] = {}
         for uuid, value in products[product_name]['products'].items():
             product_batch[str(value['id'])] = product_name
+            sell_dates[product_name] = datetime.fromisoformat(value['sell_by'])
+
+    amsterdam_tz = pytz.timezone('Europe/Amsterdam')
+    ts = datetime.now(amsterdam_tz)
+
     # obtain product_name -> total stock map
     for batch_id, s in stock.items():
         if product_batch[batch_id] in product_stock.keys():
@@ -37,9 +45,12 @@ def get_optimized_prices(products: dict, stock: dict, params: dict):
     for product_name in products.keys():
         result[product_name] = {}
         for uuid, value in products[product_name]['products'].items():
+            diff = sell_dates[product_name] - ts
+            time_factor = 1 if diff.minutes > 20 else diff.minutes / 20
             result[product_name][uuid] = float(price_function_sigmoid(
                 product_stock[product_name], *params[product_name]
-            ))
+            )) * time_factor
+
     return result
 
 
