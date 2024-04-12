@@ -34,12 +34,7 @@ order by team_name
     label=team_name
     title="Select a Team"
     />
-<DateRange data="leaderboard" dates="scraped_at" name="order_range_2" />
-<DateRange
-    name=name_of_date_range
-    data={query_name} 
-    dates=column_name
-/>
+
 
 ## Prices by product
 <LineChart 
