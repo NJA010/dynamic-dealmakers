@@ -126,6 +126,9 @@ def scrape(endpoints: Optional[list[str]] = None) -> None:
                             row.append(last)
                             row.append(int(row[4]) - int(row[3]))
                         except IndexError:
+                            if not (row[3] > 0):
+                                continue
+
                             row.append(None)
                             row.append(None)
                         output.append(row)
