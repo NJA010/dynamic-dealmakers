@@ -26,9 +26,8 @@ def get_optimized_prices(products: dict, stock: dict, params: dict):
     :return:
     """
     # get current time
-    amsterdam_tz = pytz.timezone('Europe/Amsterdam')
     utc_tz = pytz.timezone("UTC")
-    ts = datetime.now(amsterdam_tz)
+    ts = datetime.now(utc_tz)
 
     result = {}
     product_stock = {}
@@ -49,11 +48,8 @@ def get_optimized_prices(products: dict, stock: dict, params: dict):
     for product_name in products.keys():
         result[product_name] = {}
         for uuid, batch_info in products[product_name]['products'].items():
-            sell_by = amsterdam_tz.localize(datetime.fromisoformat(batch_info['sell_by']))
+            sell_by = utc_tz.localize(datetime.fromisoformat(batch_info['sell_by']))
             diff = sell_by - ts
-            if diff.days < 0: # probably wrong timezone
-                sell_by = utc_tz.localize(datetime.fromisoformat(batch_info['sell_by']))
-                diff = sell_by - ts
 
             time_factor = 1 if diff.seconds/60 > 20 else diff.seconds/60 / 20
             logging.info(f"{uuid}: sell_by: {sell_by}, now: {ts}, diff: {diff.seconds/60}, {time_factor}")
