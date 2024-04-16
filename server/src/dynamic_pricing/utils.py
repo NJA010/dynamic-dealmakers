@@ -12,7 +12,7 @@ import json
 import os
 from pathlib import Path
 import datetime
-
+from itertools import product
 
 products = [
     "apples-red",
@@ -73,6 +73,19 @@ def get_stock(client: DatabaseClient) -> list[dict]:
     return data
 
 
+def cross_join(lists, names):
+    # Generate all combinations of elements in the lists
+    combinations = product(*lists)
+    
+    # Convert each combination into a DataFrame row
+    rows = [list(combination) for combination in combinations]
+    
+    # Create a DataFrame from the rows
+    result = pd.DataFrame(rows, columns=names)
+    
+    return result
+
+
 def get_params(client: DatabaseClient) -> dict[str, np.ndarray]:
     """
     dictionary of parameters per product type
@@ -85,6 +98,7 @@ def get_params(client: DatabaseClient) -> dict[str, np.ndarray]:
         data = [dict(row) for row in data]
 
     return data
+
 
 def get_prices(client: DatabaseClient, interval: str = "1 hour"):
     query = f"""

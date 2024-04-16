@@ -35,7 +35,7 @@ class Stock:
         self.restock_interval = restock_interval
         self.expire_interval = expire_interval
 
-    @jit
+    # @jit
     def update_sale(self, quantity_sold: int):
         # quantity sold
         self.stock -= quantity_sold
@@ -49,7 +49,7 @@ class Stock:
         if ((time % self.restock_interval) == 0) and (time > 0):
             self.restock()
 
-    @jit
+    # @jit
     def initialize(self):
         """
         Restart stock back at original stock amount.
@@ -58,7 +58,7 @@ class Stock:
         """
         self.stock = self.restock_amount
 
-    @jit
+    # @jit
     def restock(self):
         """
         inventory will be restocked with the same amount everytime.
