@@ -1,5 +1,11 @@
+import logging
+
 import numpy as np
+import pytz
+from datetime import datetime
 import jax.numpy as jnp
+
+logging.basicConfig(level=logging.INFO)
 
 
 def get_simple_prices(products: dict, low: int, high: int):
@@ -19,6 +25,10 @@ def get_optimized_prices(products: dict, stock: dict, params: dict):
     :param params: {product: [params]}
     :return:
     """
+    # get current time
+    utc_tz = pytz.timezone("UTC")
+    ts = datetime.now(utc_tz)
+
     result = {}
     product_stock = {}
     product_batch = {}
@@ -27,6 +37,7 @@ def get_optimized_prices(products: dict, stock: dict, params: dict):
         result[product_name] = {}
         for uuid, value in products[product_name]['products'].items():
             product_batch[str(value['id'])] = product_name
+
     # obtain product_name -> total stock map
     for batch_id, s in stock.items():
         if product_batch[batch_id] in product_stock.keys():
@@ -36,10 +47,17 @@ def get_optimized_prices(products: dict, stock: dict, params: dict):
 
     for product_name in products.keys():
         result[product_name] = {}
-        for uuid, value in products[product_name]['products'].items():
+        for uuid, batch_info in products[product_name]['products'].items():
+            sell_by = utc_tz.localize(datetime.fromisoformat(batch_info['sell_by']))
+            diff = sell_by - ts
+
+            time_factor = 1 if diff.seconds/60 > 20 else diff.seconds/60 / 20
+            logging.info(f"{uuid}: sell_by: {sell_by}, now: {ts}, diff: {diff.seconds/60}, {time_factor}")
+
             result[product_name][uuid] = float(price_function_sigmoid(
                 product_stock[product_name], *params[product_name]
-            ))
+            )) * time_factor
+
     return result
 
 
