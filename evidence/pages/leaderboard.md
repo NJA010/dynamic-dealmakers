@@ -36,7 +36,6 @@ order by team_name
     title="Select a Team"
     />
 
-
 ## Prices by product
 <LineChart 
     data={leaderboard}
@@ -44,6 +43,10 @@ order by team_name
     y=score 
     series=team_name
     type=grouped
+    yAxisTitle="Revenue (EUR)"
+    xAxisTitle="Date"
+    xFmt="mmmm d, yyyy H:MM:SS AM/PM"
+    xAxisLabels=true
 />
 
 <DataTable data={leaderboard} search=true sort=false>
