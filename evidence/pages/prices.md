@@ -46,6 +46,28 @@ group by pri.scraped_at, bm.product_name
 order by pri.scraped_at desc, bm.product_name
 ```
 
+```sql best_prices
+select 
+    own_lowest_price
+    , product_name
+    , sum(quantity) as quantity
+    , sum(revenue) as revenue
+from ${sold_stock}
+group by own_lowest_price, product_name
+order by sum(revenue) desc
+limit 1
+```
+
+```sql hitlist
+select 
+    product_name
+    , sum(quantity) as quantity
+    , sum(revenue) as revenue
+from ${sold_stock}
+group by product_name
+order by sum(revenue) desc
+```
+
 <!-- filters -->
 ```sql products
 select distinct
@@ -98,6 +120,14 @@ order by competitor_name
     type=grouped
 />
 
+## Product revenue hitlist
+<DataTable data={hitlist} search=true sort=false>
+    <Column id=product_name title=product_name />
+    <Column id=revenue title=revenue />
+    <Column id=quantity title=quantity />
+</DataTable>
+
+## Product price table
 <DataTable data={prices} search=true sort=false>
     <Column id=product_name title=product_name />
     <Column id=scraped_at title=scraped_at />
@@ -112,6 +142,23 @@ order by competitor_name
 ## Best prices to sales ratio (DynamicDealmakers)
 {#if inputs.Products !== "%"}
 ### Product: {inputs.Products}
+
+#### Best selling price
+<BigValue 
+  data={best_prices} 
+  value=own_lowest_price
+/>
+
+<BigValue 
+  data={best_prices} 
+  value=quantity
+/>
+
+<BigValue 
+  data={best_prices} 
+  value=revenue
+/>
+
 
 <LineChart 
     data={sold_stock} 
