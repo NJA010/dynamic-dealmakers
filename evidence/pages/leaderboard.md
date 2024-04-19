@@ -12,7 +12,7 @@ select
 from memory."dynamic_dealmakers".leaderboards l
 where 
     (team_name in (${inputs.Competitor}) or ('') in (${inputs.Competitor}))
-    and scraped_at > '2024-04-12 15:00:00'
+    and scraped_at > '2024-04-12 17:00:00'
 group by scraped_at, team_name
 order by scraped_at desc, team_name
 ```
