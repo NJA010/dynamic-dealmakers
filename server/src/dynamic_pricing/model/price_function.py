@@ -49,10 +49,10 @@ def get_optimized_prices(products: dict, stock: dict, params: dict):
         result[product_name] = {}
         for uuid, batch_info in products[product_name]['products'].items():
             sell_by = utc_tz.localize(datetime.fromisoformat(batch_info['sell_by']))
-            diff = sell_by - ts
+            diff = (sell_by - ts).total_seconds() / 60
 
-            time_factor = 1 if diff.seconds/60 > 20 else diff.seconds/60 / 20
-            logging.info(f"{uuid}: sell_by: {sell_by}, now: {ts}, diff: {diff.seconds/60}, {time_factor}")
+            time_factor = 1 if diff > 20 else diff / 20
+            logging.info(f"{uuid}: sell_by: {sell_by}, now: {ts}, diff: {diff}, {time_factor}")
             params[product_name][1] = params[product_name][1] * time_factor
             result[product_name][uuid] = float(price_function_sigmoid(
                 product_stock[product_name], *params[product_name]
