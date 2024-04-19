@@ -429,37 +429,37 @@ if __name__ == "__main__":
     # DATABASE
     db_client = DatabaseClient(load_config())
     df_prices = get_prices(db_client, interval="2 hour")
-
-    # READ LOCAl JSON
-    # df_prices = pd.read_json("./prices.json")
-
+    #
+    # # READ LOCAl JSON
+    # # df_prices = pd.read_json("./prices.json")
+    #
     # agg prices per batch for simplicity
-    df_prices = (
-        df_prices.groupby(["competitor_name", "scraped_at", "product_name"])
-        .competitor_price.mean()
-        .reset_index()
-    )
-    # create stock objects
-    stock = {team: {} for team in team_names}
-    _ = {
-        stock[row[1]["competitor_name"]].update(
-            {
-                row[1]["product_name"]: Stock(
-                    name=row[1]["product_name"],
-                    stock=settings.stock_start[row[1]["product_name"]],
-                    restock_amount=settings.stock_start[row[1]["product_name"]],
-                    restock_interval=settings.restock_interval[row[1]["product_name"]],
-                    expire_interval=settings.expire_interval[row[1]["product_name"]],
-                )
-            }
-        )
-        for row in df_prices[["competitor_name", "product_name"]]
-        .drop_duplicates()
-        .iterrows()
-    }
-    simulation_data = run_simulation(df_prices, stock, settings)
-    save_params(simulation_data)
-    # simulation_data = json.load(open('./params.json'))
+    # df_prices = (
+    #     df_prices.groupby(["competitor_name", "scraped_at", "product_name"])
+    #     .competitor_price.mean()
+    #     .reset_index()
+    # )
+    # # create stock objects
+    # stock = {team: {} for team in team_names}
+    # _ = {
+    #     stock[row[1]["competitor_name"]].update(
+    #         {
+    #             row[1]["product_name"]: Stock(
+    #                 name=row[1]["product_name"],
+    #                 stock=settings.stock_start[row[1]["product_name"]],
+    #                 restock_amount=settings.stock_start[row[1]["product_name"]],
+    #                 restock_interval=settings.restock_interval[row[1]["product_name"]],
+    #                 expire_interval=settings.expire_interval[row[1]["product_name"]],
+    #             )
+    #         }
+    #     )
+    #     for row in df_prices[["competitor_name", "product_name"]]
+    #     .drop_duplicates()
+    #     .iterrows()
+    # }
+    # simulation_data = run_simulation(df_prices, stock, settings)
+    # save_params(simulation_data)
+    simulation_data = json.load(open('./params.json'))
     # opt_list = unwrap_params(opt)
     # db_client.insert_values(
     #     table_name="params",
