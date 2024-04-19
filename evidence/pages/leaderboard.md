@@ -12,6 +12,7 @@ select
 from memory."dynamic_dealmakers".leaderboards l
 where 
     (team_name in (${inputs.Competitor}) or ('') in (${inputs.Competitor}))
+    and scraped_at > '2024-04-12 15:00:00'
 group by scraped_at, team_name
 order by scraped_at desc, team_name
 ```
@@ -35,7 +36,6 @@ order by team_name
     title="Select a Team"
     />
 
-
 ## Prices by product
 <LineChart 
     data={leaderboard}
@@ -43,6 +43,10 @@ order by team_name
     y=score 
     series=team_name
     type=grouped
+    yAxisTitle="Revenue (EUR)"
+    xAxisTitle="Date"
+    xFmt="mmmm d, yyyy H:MM:SS AM/PM"
+    xAxisLabels=true
 />
 
 <DataTable data={leaderboard} search=true sort=false>
